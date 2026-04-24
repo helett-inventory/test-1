@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Helett Inventory Intelligence</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --bg:         #0f1117;
+  --bg2:        #161820;
+  --bg3:        #1c1f2b;
+  --card:       #1e2130;
+  --card2:      #242840;
+  --border:     #2a2d3e;
+  --border2:    #353858;
+  --text:       #e8eaf6;
+  --text2:      #9395a5;
+  --text3:      #5f6170;
+  --accent:     #6366f1;
+  --accent2:    #818cf8;
+  --green:      #22c55e;
+  --green-dim:  #166534;
+  --orange:     #f59e0b;
+  --red:        #ef4444;
+  --blue:       #38bdf8;
+  --purple:     #a78bfa;
+  --teal:       #14b8a6;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5;}
+
+/* HEADER */
+.hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 28px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+.hdr-brand{display:flex;align-items:center;gap:12px;}
+.hdr-icon{width:34px;height:34px;background:linear-gradient(135deg,#6366f1,#818cf8);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.hdr-title{font-size:0.9rem;font-weight:700;color:var(--text);}
+.hdr-sub{font-size:0.67rem;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-top:1px;}
+.sync-pill{display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:4px 12px 4px 8px;font-size:0.7rem;font-family:'IBM Plex Mono',monospace;color:var(--text2);}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--text3);transition:background .3s;}
+.sdot.live{background:var(--green);animation:blink 2s infinite;}
+.sdot.err{background:var(--red);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* LOADING */
+#scr-load{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 58px);gap:18px;}
+.spinner{width:40px;height:40px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+.load-msg{font-size:.82rem;color:var(--text2);font-family:'IBM Plex Mono',monospace;}
+.load-step{font-size:.72rem;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-top:4px;}
+
+/* ERROR */
+#scr-err{display:none;max-width:640px;margin:60px auto;background:#1c0505;border:1px solid #7f1d1d;border-radius:12px;padding:24px;}
+.err-t{font-weight:700;color:var(--red);margin-bottom:8px;}
+.err-b{font-family:'IBM Plex Mono',monospace;font-size:.73rem;color:#fca5a5;white-space:pre-wrap;line-height:1.7;}
+
+/* DASHBOARD */
+#scr-dash{display:none;}
+.main{padding:24px 28px;max-width:1600px;margin:0 auto;}
+
+/* DEBUG */
+#dbg{display:none;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:20px;font-family:'IBM Plex Mono',monospace;font-size:.69rem;color:var(--text2);white-space:pre-wrap;line-height:1.7;}
+
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:14px;margin-bottom:22px;}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden;transition:border-color .2s;}
+.kpi:hover{border-color:var(--border2);}
+.kpi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;}
+.kpi.ci::after{background:linear-gradient(90deg,#6366f1,#818cf8);}
+.kpi.cg::after{background:linear-gradient(90deg,#22c55e,#4ade80);}
+.kpi.cb::after{background:linear-gradient(90deg,#38bdf8,#7dd3fc);}
+.kpi.co::after{background:linear-gradient(90deg,#f59e0b,#fbbf24);}
+.kpi.cp::after{background:linear-gradient(90deg,#a78bfa,#c4b5fd);}
+.kpi.cr::after{background:linear-gradient(90deg,#ef4444,#f87171);}
+.kpi.ct::after{background:linear-gradient(90deg,#14b8a6,#5eead4);}
+.kpi.cm::after{background:linear-gradient(90deg,#f472b6,#f9a8d4);}
+.kpi-lbl{font-size:.63rem;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--text3);margin-bottom:10px;}
+.kpi-val{font-size:1.75rem;font-weight:800;line-height:1;letter-spacing:-.02em;}
+.kpi.ci .kpi-val{color:#818cf8;}.kpi.cg .kpi-val{color:#4ade80;}.kpi.cb .kpi-val{color:#7dd3fc;}
+.kpi.co .kpi-val{color:#fbbf24;}.kpi.cp .kpi-val{color:#c4b5fd;}.kpi.cr .kpi-val{color:#f87171;}
+.kpi.ct .kpi-val{color:#5eead4;}.kpi.cm .kpi-val{color:#f9a8d4;}
+.kpi-sub{font-size:.67rem;color:var(--text3);margin-top:6px;font-family:'IBM Plex Mono',monospace;}
+
+/* CHARTS ROW */
+.charts-row{display:grid;grid-template-columns:1fr 340px;gap:16px;margin-bottom:16px;}
+@media(max-width:900px){.charts-row{grid-template-columns:1fr;}}
+/* COST CHARTS ROW */
+.cost-charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:22px;}
+@media(max-width:900px){.cost-charts-row{grid-template-columns:1fr;}}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 22px;}
+.chart-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
+.chart-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text2);}
+.bar-legend{display:flex;gap:12px;}
+.bl-item{display:flex;align-items:center;gap:5px;font-size:.67rem;color:var(--text3);}
+.bl-dot{width:8px;height:8px;border-radius:2px;}
+.bar-wrap{height:230px;}
+.donut-outer{display:flex;flex-direction:column;align-items:center;}
+.donut-ring{position:relative;width:170px;height:170px;display:flex;align-items:center;justify-content:center;}
+.donut-ring canvas{position:absolute;top:0;left:0;}
+.donut-ctr{text-align:center;pointer-events:none;position:relative;z-index:1;}
+.dc-val{font-size:1.5rem;font-weight:800;color:var(--text);}
+.dc-lbl{font-size:.62rem;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;}
+.dl{display:flex;gap:16px;margin-top:14px;justify-content:center;flex-wrap:wrap;}
+.dl-item{display:flex;align-items:center;gap:6px;font-size:.7rem;color:var(--text2);}
+.dl-sw{width:10px;height:10px;border-radius:3px;}
+
+/* TABLE SECTION */
+.tbl-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px;}
+.sec-title{font-size:.77rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text2);}
+.tbl-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.srch{position:relative;display:flex;align-items:center;}
+.srch svg{position:absolute;left:9px;color:var(--text3);pointer-events:none;flex-shrink:0;}
+.srch input{height:32px;padding:0 12px 0 29px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:.73rem;color:var(--text);outline:none;width:195px;transition:border-color .15s,width .2s;}
+.srch input::placeholder{color:var(--text3);}
+.srch input:focus{border-color:var(--accent);width:230px;}
+.chips{display:flex;gap:6px;flex-wrap:wrap;}
+.chip{height:30px;padding:0 10px;border-radius:7px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:.69rem;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:4px;white-space:nowrap;}
+.chip:hover{border-color:var(--border2);color:var(--text);}
+.chip.r{background:#1c0505;border-color:var(--red);color:var(--red);}
+.chip.o{background:#1c1205;border-color:var(--orange);color:var(--orange);}
+.chip.p{background:rgba(167,139,250,.1);border-color:var(--purple);color:var(--purple);}
+.chip.b{background:#041c2e;border-color:var(--blue);color:var(--blue);}
+.rbadge{height:30px;padding:0 10px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;font-family:'IBM Plex Mono',monospace;font-size:.69rem;color:var(--text3);display:flex;align-items:center;}
+
+/* DOWNLOAD BUTTON */
+.btn-dl{
+  height:30px;padding:0 12px;
+  background:linear-gradient(135deg,rgba(34,197,94,.15),rgba(34,197,94,.08));
+  border:1px solid rgba(34,197,94,.35);
+  border-radius:7px;
+  color:#4ade80;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:.69rem;font-weight:600;
+  cursor:pointer;
+  display:flex;align-items:center;gap:6px;
+  transition:all .15s;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+.btn-dl:hover{background:linear-gradient(135deg,rgba(34,197,94,.25),rgba(34,197,94,.14));border-color:rgba(34,197,94,.6);color:#86efac;}
+.btn-dl:active{transform:scale(.97);}
+.btn-dl svg{flex-shrink:0;}
+
+/* TABLE */
+.tbl-outer{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.tbl-scroll{overflow:auto;max-height:620px;min-height:320px;}
+table{width:100%;border-collapse:collapse;font-size:.77rem;}
+thead{position:sticky;top:0;z-index:20;}
+thead tr{background:var(--bg2);border-bottom:1px solid var(--border2);}
+th{padding:10px 10px;text-align:left;font-size:.61rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text3);white-space:nowrap;cursor:pointer;user-select:none;transition:color .15s;border-right:1px solid var(--border);}
+th:last-child{border-right:none;}
+th:hover{color:var(--text2);}
+th.srt{color:var(--accent2);}
+.thi{display:flex;align-items:center;gap:5px;}
+.sarr{opacity:.3;font-size:.63rem;}
+th.srt .sarr{opacity:1;color:var(--accent2);}
+th.nc{text-align:right;}
+th.nc .thi{justify-content:flex-end;}
+th.compact{width:1%;padding:10px 8px;}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--card2);}
+td{padding:9px 10px;border-right:1px solid var(--border);vertical-align:middle;white-space:nowrap;}
+td.compact{padding:9px 8px;}
+td:last-child{border-right:none;}
+.td-sku{font-family:'IBM Plex Mono',monospace;font-size:.71rem;font-weight:500;color:var(--text2);max-width:155px;overflow:hidden;text-overflow:ellipsis;}
+.td-asin{font-family:'IBM Plex Mono',monospace;font-size:.71rem;font-weight:500;color:var(--blue);letter-spacing:.02em;}
+.n{font-family:'IBM Plex Mono',monospace;font-weight:500;text-align:right;}
+.n.z{color:var(--text3);}
+.n.g{color:var(--green);}
+.n.w{color:var(--orange);}
+/* Inbound column styling — pink accent */
+.n.ib{color:#f9a8d4;}
+.n.ib.z{color:var(--text3);}
+.ntot{font-family:'IBM Plex Mono',monospace;font-weight:700;text-align:right;color:#4ade80;background:rgba(34,197,94,.05);}
+.ntot.low{color:var(--orange);background:rgba(245,158,11,.06);}
+.td-cost{font-family:'IBM Plex Mono',monospace;font-weight:600;text-align:right;color:#5eead4;}
+.td-cost.z{color:var(--text3);}
+.td-st{width:1%;white-space:nowrap;}
+
+/* BADGES + TOOLTIPS */
+.iw{display:flex;gap:4px;flex-wrap:wrap;}
+.ibadge{display:inline-flex;align-items:center;gap:3px;border-radius:5px;padding:2px 7px;font-size:.61rem;font-weight:700;cursor:default;position:relative;white-space:nowrap;}
+.ibadge.mm{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:var(--red);}
+.ibadge.ls{background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);color:var(--orange);}
+.ibadge.hu{background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);color:var(--purple);}
+.ibadge.fo{background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:var(--blue);}
+.th{position:relative;display:inline-flex;}
+.tb{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#0a0b10;border:1px solid var(--border2);border-radius:8px;padding:9px 12px;min-width:200px;max-width:250px;font-size:.71rem;color:var(--text2);line-height:1.55;z-index:999;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.5);white-space:normal;word-break:break-word;}
+.tb::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#0a0b10;}
+.th:hover .tb,.th:focus .tb,.th.to .tb{display:block;}
+.tb-t{font-weight:700;color:var(--text);margin-bottom:3px;font-size:.72rem;}
+
+/* EMPTY */
+.empty{text-align:center;padding:52px 24px;color:var(--text3);}
+.empty .ei{font-size:2.2rem;margin-bottom:10px;}
+.empty p{font-size:.82rem;}
+
+/* TABLE FOOTER */
+.tbl-ft{padding:8px 16px;background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:.67rem;color:var(--text3);}
+
+@media(max-width:768px){.main{padding:14px;}.hdr{padding:0 14px;}.kpi-grid{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-brand">
+    <div>
+      <div class="hdr-title">Helett Inventory Intelligence Dashboard</div>
+      <div class="hdr-sub" id="last-sync">Connecting…</div>
+    </div>
+  </div>
+  <div class="sync-pill"><div class="sdot" id="sdot"></div><span id="slbl">Loading</span></div>
+</header>
+
+<div id="scr-load">
+  <div class="spinner"></div>
+  <div><div class="load-msg">Fetching Google Sheets…</div><div class="load-step" id="lstep">Initialising</div></div>
+</div>
+
+<div id="scr-err" class="main">
+  <div class="err-t">⚠ Failed to load dashboard</div>
+  <div class="err-b" id="errbody"></div>
+</div>
+
+<div id="scr-dash">
+<div class="main">
+
+  <div id="dbg"></div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi ci"><div class="kpi-lbl">Total Sellable</div><div class="kpi-val" id="k0">—</div><div class="kpi-sub">FC + FBA combined</div></div>
+    <div class="kpi cg"><div class="kpi-lbl">FC Sellable</div><div class="kpi-val" id="k1">—</div><div class="kpi-sub">Warehouse stock</div></div>
+    <div class="kpi cb"><div class="kpi-lbl">FBA Available</div><div class="kpi-val" id="k2">—</div><div class="kpi-sub">Amazon fulfillable</div></div>
+    <div class="kpi cm"><div class="kpi-lbl">Total Inbound</div><div class="kpi-val" id="k7">—</div><div class="kpi-sub">Units in transit to FBA</div></div>
+    <div class="kpi cp"><div class="kpi-lbl">Total Unsellable</div><div class="kpi-val" id="k3">—</div><div class="kpi-sub">FC + FBA unsellable</div></div>
+    <div class="kpi co"><div class="kpi-lbl">Low Stock SKUs</div><div class="kpi-val" id="k4">—</div><div class="kpi-sub">Total sellable &lt; 50</div></div>
+    <div class="kpi cr"><div class="kpi-lbl">Flagged SKUs</div><div class="kpi-val" id="k5">—</div><div class="kpi-sub">Rows with any issue</div></div>
+    <div class="kpi ct"><div class="kpi-lbl">Total Inventory Cost</div><div class="kpi-val" id="k6">—</div><div class="kpi-sub">Cost × total sellable</div></div>
+  </div>
+
+  <!-- Stock Charts -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-hd">
+        <div class="chart-title">Sellable Stock — FC vs FBA (Top 15)</div>
+        <div class="bar-legend">
+          <div class="bl-item"><div class="bl-dot" style="background:#6366f1"></div>FC Sellable</div>
+          <div class="bl-item"><div class="bl-dot" style="background:#38bdf8"></div>FBA Available</div>
+          <div class="bl-item"><div class="bl-dot" style="background:#f472b6"></div>Inbound</div>
+        </div>
+      </div>
+      <div class="bar-wrap"><canvas id="cbar"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-hd"><div class="chart-title">Unsellable Breakdown</div></div>
+      <div class="donut-outer">
+        <div class="donut-ring">
+          <canvas id="cdonut" width="170" height="170"></canvas>
+          <div class="donut-ctr"><div class="dc-val" id="dtotal">—</div><div class="dc-lbl">Unsellable</div></div>
+        </div>
+        <div class="dl">
+          <div class="dl-item"><div class="dl-sw" style="background:#a78bfa"></div><span id="dl0">FC — —</span></div>
+          <div class="dl-item"><div class="dl-sw" style="background:#f59e0b"></div><span id="dl1">FBA — —</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cost Charts -->
+  <div class="cost-charts-row">
+    <div class="chart-card">
+      <div class="chart-hd">
+        <div class="chart-title">Inventory Cost by SKU (Top 15 — Cost × Qty)</div>
+      </div>
+      <div class="bar-wrap"><canvas id="ccostbar"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-hd"><div class="chart-title">Cost Distribution (Top 10 by Cost/Unit)</div></div>
+      <div class="donut-outer">
+        <div class="donut-ring" style="width:180px;height:180px;">
+          <canvas id="ccostdonut" width="180" height="180"></canvas>
+          <div class="donut-ctr"><div class="dc-val" style="font-size:1.1rem;" id="dctotal">—</div><div class="dc-lbl">Total Cost</div></div>
+        </div>
+        <div class="dl" id="costdonutlegend" style="max-width:280px;gap:8px 14px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="tbl-hd">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="sec-title">Inventory Table</span>
+      <span class="rbadge" id="rbadge">—</span>
+    </div>
+    <div class="tbl-tools">
+      <div class="srch">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="sinput" placeholder="Search SKU or ASIN…" oninput="applyFilters()"/>
+      </div>
+      <div class="chips">
+        <button class="chip" id="chmm" onclick="toggleChip('mm')">⚠ Mismatch</button>
+        <button class="chip" id="chls" onclick="toggleChip('ls')">↓ Low Stock</button>
+        <button class="chip" id="chhu" onclick="toggleChip('hu')">↑ High Unsellable</button>
+        <button class="chip" id="chfo" onclick="toggleChip('fo')">◈ FC Only</button>
+      </div>
+      <button class="btn-dl" onclick="downloadExcel()" title="Download currently visible rows as Excel">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Export Excel
+      </button>
+    </div>
+  </div>
+
+  <div class="tbl-outer">
+    <div class="tbl-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortBy('sku')"><div class="thi">SKU<span class="sarr" data-col="sku">↕</span></div></th>
+            <th onclick="sortBy('asin')"><div class="thi">ASIN<span class="sarr" data-col="asin">↕</span></div></th>
+            <th class="nc compact" onclick="sortBy('fc_sellable')"><div class="thi">FC Sell<span class="sarr" data-col="fc_sellable">↕</span></div></th>
+            <th class="nc compact" onclick="sortBy('fc_unsellable')"><div class="thi">FC Unsell<span class="sarr" data-col="fc_unsellable">↕</span></div></th>
+            <th class="nc compact" onclick="sortBy('fba_available')"><div class="thi">FBA Avail<span class="sarr" data-col="fba_available">↕</span></div></th>
+            <th class="nc compact" onclick="sortBy('fba_unsellable')"><div class="thi">FBA Unsell<span class="sarr" data-col="fba_unsellable">↕</span></div></th>
+            <th class="nc compact" onclick="sortBy('inbound')"><div class="thi">Inbound<span class="sarr" data-col="inbound">↕</span></div></th>
+            <th class="nc compact" onclick="sortBy('total')"><div class="thi">Total<span class="sarr" data-col="total">↕</span></div></th>
+            <th class="nc" onclick="sortBy('unit_cost')"><div class="thi">Unit Cost<span class="sarr" data-col="unit_cost">↕</span></div></th>
+            <th class="nc" onclick="sortBy('total_cost')"><div class="thi">Total Cost<span class="sarr" data-col="total_cost">↕</span></div></th>
+            <th onclick="sortBy('issue_count')"><div class="thi">Status<span class="sarr" data-col="issue_count">↕</span></div></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="tbl-ft">
+      <span id="tfc">—</span>
+      <span id="tft">—</span>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════
+const SHEET_URL="https://docs.google.com/spreadsheets/d/1jZv_Qqeg2RWXssYroxyS3_fCW_D09Nqhbf6Px9s6pR4/export?format=xlsx";
+const SH_SELL="Sellable_Inventory", SH_UN="Unsellable", SH_FBA="FBA_Inventory", SH_RPT="FBAInvReport";
+
+// ══════════════════════════════════════════
+// ASIN BLOCKLIST — these ASINs are excluded from the dashboard entirely
+// ══════════════════════════════════════════
+const ASIN_BLOCKLIST = new Set([
+  "B0CN1153M4","B0F5Q4RV2R","B0BRXX6HMR","B0BYZVNPL4","B0C9CVWLL3",
+  "B0D4F7Y3NZ","B0CN11FZW5","B0888WZ411","B0C8TW9ZR6","B0CL4GVKSN",
+  "B0BFRS5BLT","B0CB1DDNV7","B01G46PYPO","B0BZ8HF4WL","B07TW7QMBN",
+  "B07TD94GPJ","B0CLYLNCZD","B0CFHRLWM2","B0B5VQYGW6","B0CQ24C7DX",
+  "B0DD7LH58C","B0CQTJH6WX","B0D4F12NJT","B0CD7YNMRM","B07QLRJGDJ",
+  "B0DXKWKBWQ","B0CHFQPZMK","B0CB8YRRZ4","B0DLKM4N5G","B0FZL52KY4",
+  "B0DGGPBX97","B0CQNM753Q","B0F1KF6P4J","B07XP99KF8",
+  "B0CXPX968F","B0C999P5KB","B09FGVPBHK","B0BPPNNVT5","B0DXC17SSS",
+  "B0BDFLDDKR","B0BJC4WGDK","B084TQMCLN","B016DGF0ZY","B0BLNLYVFQ",
+  "B0DD6WNP26","B08LQ1G624","B0DPJ8BWCG","B0GV4K1P7L","B0CNLW386T",
+  "B013JYPTA4","B0BRKVYG8X","B07TB4DZTK","B0DJK3GNCY","B01DYJ8R4O",
+  "B0D9KKFVT6","B0BL3LJHRB","B08FC23JD7","B07T2VZMSG","B0D9KJJ7WF",
+  "B07FDG8GQT","B01H35Y352","B07MK547MK","B0C3HZDJ5C","B0FL2VFCT9",
+  "B0C96F68YL","B0BRXVQ85M","B0FZSCW83R","B0BD9191XX","B0DQGSMG4N",
+  "B091TCSG4D","B07T85LWH7","B09TY1SZP6","B0DTQ3ZCBH","B0DRL8ZDWX",
+  "B086ZFW6HD","B0BJMLX4RR","B0CQTK12SW","B09K4M1JSN","B09TWLRXZ3",
+  "B07Q5PC3SV","B0F6MXY655","B0BRN9ZGL1","B0CC8ZFPRX","B0DD7RS56N",
+  "B0CB8X5RCN","B0C8NNB48Z","B08PSLZYZV","B0FGTMFZFM","B0DGCG6MN4",
+  "B0CR7JGRYJ","B0FHQSL9DH","B0CMMMJ5WY"
+]);
+
+// ══════════════════════════════════════════
+// COST MAP (₹ per unit, keyed by ASIN)
+// ══════════════════════════════════════════
+const COST_MAP = {
+  "B0FSSL1Q2X": 4864.07,
+  "B0BPHT9WY9": 2828.0,
+  "B0DQGQY98X": 941.8,
+  "B0FZSJRV5F": 1825.35,
+  "B0GSZRF4M5": 1227.75,
+  "B0CQM5THV3": 1059.47,
+  "B0F8QKDJN3": 1477.0,
+  "B0GPCQ9KLN": 3830.83,
+  "B0DKXD4N4R": 4529.89,
+  "B0DGF32QRT": 1018.37,
+  "B0F5Q4RV2R": 1339.0,
+  "B0FGCT1MWB": 1410.78,
+  "B0CJVGCB4K": 3333.34,
+  "B0D39NNN57": 1350.3,
+  "B0CR75SMCQ": 593.04,
+  "B0CN1153M4": 1224.55,
+  "B0CRB2KDC6": 1413.08,
+  "B0CBXG8CLB": 1815.27,
+  "B0CZ99K438": 1943.19,
+  "B0CBC9G7W2": 795.13,
+  "B0BFFW365Y": 2837.0,
+  "B0DDL3TR1L": 924.47,
+  "B0DRL8ZDWX": 2942.4,
+  "B0CPDPTHVN": 1126.75,
+  "B0CXN44J7J": 1033.54,
+  "B0C8JRN652": 2927.79,
+  "B0FHQSL9DH": 3740.06,
+  "B0DPCRLRNJ": 1347.23,
+  "B0D4F7Y3NZ": 1854.0,
+  "B0D9LS2P2F": 856.1,
+  "B0CLYLNCZD": 3556.78,
+  "B0GDKY6QHN": 1354.03,
+  "B0DW8DX2M9": 2734.98,
+  "B0FZSCW83R": 1082.64,
+  "B0DBCW1PS4": 2233.25,
+  "B0G1YY4MJK": 861.26,
+  "B0FKZPDH66": 3252.79,
+  "B0DL5PXZ65": 3190.43,
+  "B0FLV3V1W4": 987.39,
+  "B0DPJ8BWCG": 1344.0,
+  "B0C72FSCFM": 757.24,
+  "B0DXKWKBWQ": 122.0,
+  "B0DW8PCP6D": 158.94,
+  "B0CHFQPZMK": 217.0,
+  "B0D1P7SC46": 1138.23,
+  "B0FL2VFCT9": 122.0,
+  "B0DXC17SSS": 122.0,
+  "B0DTNVQ34H": 92.83,
+  "B0D9T8R3W8": 132.64,
+  "B0D4F12NJT": 1.0
+};
+
+// ══════════════════════════════════════════
+// SKU MATCH MAP  (seller SKU names, keyed by ASIN)
+// ══════════════════════════════════════════
+const SKU_MAP = {
+  "B0GPCQ9KLN": { "sellerSku": "Logic View Monitor HLT550", "finalName": "HLT550 Video Monitor" },
+  "B0F5Q4RV2R": { "sellerSku": "Helett 2D Barcode Scanner Fba", "finalName": "Helett 2D Barcode Scanner Fba" },
+  "B0C8JRN652": { "sellerSku": "UY16 UHF Wireless mic", "finalName": "Uy 16 wireless mic" },
+  "B0CN1153M4": { "sellerSku": "Helett HT35 Dual UHF Mic", "finalName": "Helett HT35 Dual UHF Mic" },
+  "B0BRXX6HMR": { "sellerSku": "Wifi Dongle FBA", "finalName": "Wifi Dongle FBA" },
+  "B0G1YY4MJK": { "sellerSku": "Helett travel-Fi 4G", "finalName": "Helett travelfi 4g Hotspot" },
+  "B0BYZVNPL4": { "sellerSku": "UNIY UY 35 Mini led Projector", "finalName": "UNIY UY 35 Mini led Projector" },
+  "B0C9CVWLL3": { "sellerSku": "Uniy S11 FBA", "finalName": "Uniy S11 FBA" },
+  "B0FLK7RSCV": { "sellerSku": "Helett HLT550 Portable Monitor", "finalName": "Helett HLT550 Portable Monitor" },
+  "B0DL5PXZ65": { "sellerSku": "Helett H55C Thermal Label Printer", "finalName": "H30c pro old (HE480)" },
+  "B0FZSJRV5F": { "sellerSku": "Helett H65C Label Printer", "finalName": "H65C Mini Printer (New Blue)" },
+  "B0D4F7Y3NZ": { "sellerSku": "Helett H29 Wireless Drama Mic", "finalName": "Helett H29 Wireless Drama Mic" },
+  "B0DKXD4N4R": { "sellerSku": "Helett A4L Pro Thermal Printer", "finalName": "Helett A4L Pro Thermal Printer" },
+  "B0CN11FZW5": { "sellerSku": "T10 Projector FBA", "finalName": "T10 Projector FBA" },
+  "B0888WZ411": { "sellerSku": "Helett TV", "finalName": "Helett TV" },
+  "B0C8TW9ZR6": { "sellerSku": "I5-Z3IP-OQGJ", "finalName": "I5-Z3IP-OQGJ" },
+  "B0CL4GVKSN": { "sellerSku": "UNIY T10 Mini Projector", "finalName": "UNIY T10 Mini Projector" },
+  "B0BFRS5BLT": { "sellerSku": "UY8401 Smart Digital Door Lock FBA", "finalName": "UY8401 Smart Digital Door Lock FBA" },
+  "B0CB1DDNV7": { "sellerSku": "UY20 Streaming mic", "finalName": "UY20 Streaming mic" },
+  "B0CJVGCB4K": { "sellerSku": "H30c printer (White)", "finalName": "H30c printer (New)" },
+  "B0CRB2KDC6": { "sellerSku": "HT320 Digital Door MFN", "finalName": "HT320 Smart lock" },
+  "B01G46PYPO": { "sellerSku": "UC46 New Projector 12", "finalName": "UC46 New Projector 12" },
+  "B0BZ8HF4WL": { "sellerSku": "UNIY UY410 Barcode Scanner", "finalName": "UNIY UY410 Barcode Scanner" },
+  "B07TW7QMBN": { "sellerSku": "YUNTAB 3G Tablet", "finalName": "YUNTAB 3G Tablet" },
+  "B07TD94GPJ": { "sellerSku": "Proscan PLT8990-K", "finalName": "Proscan PLT8990-K" },
+  "B0BFFW365Y": { "sellerSku": "UNIY UY610 Smart Door Lock FBA", "finalName": "UNIY UY610 Smart Door Lock FBA" },
+  "B0BPHT9WY9": { "sellerSku": "UY40 Projector FBA", "finalName": "UY40 Projector FBA" },
+  "B0CLYLNCZD": { "sellerSku": "810 App Door Lock FBA", "finalName": "810 App Door Lock FBA" },
+  "B0CFHRLWM2": { "sellerSku": "helett HT 75W car power inverter", "finalName": "helett HT 75W car power inverter" },
+  "B0B5VQYGW6": { "sellerSku": "UNIY Smart Life Security Camera", "finalName": "UNIY Smart Life Security Camera" },
+  "B0CQ24C7DX": { "sellerSku": "V0-FM48-RT2B", "finalName": "V0-FM48-RT2B" },
+  "B0DGF32QRT": { "sellerSku": "Helett AC1200 Dual Band Wifi Router", "finalName": "AC1200 Wifi Router" },
+  "B0DD7LH58C": { "sellerSku": "Helett JH1200", "finalName": "Helett JH1200" },
+  "B0FZL52KY4": { "sellerSku": "Helett infiStick Tv Stick", "finalName": "Helett infiStick Tv Stick" },
+  "B0CQTJH6WX": { "sellerSku": "Car-Jumper-Black", "finalName": "Car-Jumper-Black" },
+  "B0D39NNN57": { "sellerSku": "Helett HT15 wired desktop scanner", "finalName": "Helett HT15 wired desktop scanner" },
+  "B0D4F12NJT": { "sellerSku": "Uniy U01 Rfid Card", "finalName": "Uniy U01 Rfid Card" },
+  "B0CD7YNMRM": { "sellerSku": "XP-H1UH-2R9U", "finalName": "XP-H1UH-2R9U" },
+  "B07QLRJGDJ": { "sellerSku": "4 UC46 Projector", "finalName": "4 UC46 Projector" },
+  "B0DXKWKBWQ": { "sellerSku": "Helett 2x1.5 Thermal Label", "finalName": "65C Label Roll" },
+  "B0CHFQPZMK": { "sellerSku": "helett HT200 Soundbar", "finalName": "helett HT200 Soundbar" },
+  "B0CB8YRRZ4": { "sellerSku": "helett HU1 kids GPS Tracking watch", "finalName": "helett HU1 kids GPS Tracking watch" },
+  "B0CBC9G7W2": { "sellerSku": "HT410 wired Barcode scanner FBA", "finalName": "HT410 barcode (BLUE)" },
+  "B0DLKM4N5G": { "sellerSku": "Helett Z567 Tyre Inflator", "finalName": "Helett Z567 Tyre Inflator" },
+  "B0DGGPBX97": { "sellerSku": "Helett travel-Fi 4g Hotspot", "finalName": "Helett travel-Fi 4g Hotspot" },
+  "B0DPCRLRNJ": { "sellerSku": "HT20pro Wirelss Barcode Scanner", "finalName": "HT20 Pro barcode" },
+  "B0CQNM753Q": { "sellerSku": "Helett H92i Android Tv Stick", "finalName": "Helett H92i Android Tv Stick" },
+  "B0C72FSCFM": { "sellerSku": "U19 wireless Training Mic", "finalName": "U19 wireless Training Mic" },
+  "B0F1KF6P4J": { "sellerSku": "Helett HT-M318 Desktop Barcode Scanner", "finalName": "Helett HT-M318 Desktop Barcode Scanner" },
+  "B07XP99KF8": { "sellerSku": "UC46 0 Projector", "finalName": "UC46 0 Projector" },
+  "B0CXPX968F": { "sellerSku": "H89i", "finalName": "H89i" },
+  "B0C999P5KB": { "sellerSku": "HT210 galaxy projector kid", "finalName": "HT210 galaxy projector kid" },
+  "B09FGVPBHK": { "sellerSku": "Led Projector", "finalName": "Led Projector" },
+  "B0BPPNNVT5": { "sellerSku": "UNIY UY (310) 4G Wi-Fi  Hotspot Dongle", "finalName": "UNIY UY (310) 4G Wi-Fi  Hotspot Dongle" },
+  "B0DXC17SSS": { "sellerSku": "HE24 Thermal Label 15x30", "finalName": "HE24 Thermal Label 15x30" },
+  "B0BDFLDDKR": { "sellerSku": "UNIY UY8300 FBA", "finalName": "UNIY UY8300 FBA" },
+  "B0BJC4WGDK": { "sellerSku": "UY 12 UHF Dual wireless MIC", "finalName": "UY 12 UHF Dual wireless MIC" },
+  "B0CBXG8CLB": { "sellerSku": "HT210 Door lock", "finalName": "HT210 Door lock" },
+  "B084TQMCLN": { "sellerSku": "UC 200 Projector", "finalName": "UC 200 Projector" },
+  "B016DGF0ZY": { "sellerSku": "UNIC UC40 Projector 1080p", "finalName": "UNIC UC40 Projector 1080p" },
+  "B0BLNLYVFQ": { "sellerSku": "G5-MA5V-WDTH", "finalName": "G5-MA5V-WDTH" },
+  "B0DD6WNP26": { "sellerSku": "Helett HW10 wifi extender", "finalName": "Helett HW10 wifi extender" },
+  "B08LQ1G624": { "sellerSku": "UC46 projector", "finalName": "UC46 projector" },
+  "B0DPJ8BWCG": { "sellerSku": "Helett H92 TV Stick", "finalName": "Helett H92 TV Stick" },
+  "B0CXN44J7J": { "sellerSku": "helett H58i Bluetooth Printer FBA", "finalName": "H58i mini printer" },
+  "B0CNLW386T": { "sellerSku": "Helett HT15 wired Barcode Scanner FBA", "finalName": "Helett HT15 wired Barcode Scanner FBA" },
+  "B0D9LS2P2F": { "sellerSku": "Helett HL96 Hair Dryer FBA", "finalName": "Helett HL96 Hair Dryer" },
+  "B0DW8DX2M9": { "sellerSku": "Helett H30CLite Printer", "finalName": "H30c lite printer" },
+  "B013JYPTA4": { "sellerSku": "UC 40+ Projector 1325", "finalName": "UC 40+ Projector 1325" },
+  "B0BRKVYG8X": { "sellerSku": "2D-B2X1-4D6F", "finalName": "2D-B2X1-4D6F" },
+  "B07TB4DZTK": { "sellerSku": "RD-801 Projector", "finalName": "RD-801 Projector" },
+  "B0FSSL1Q2X": { "sellerSku": "Helett H30C Printer New FBA", "finalName": "H30c printer(Old)" },
+  "B0F8QKDJN3": { "sellerSku": "Helett Ht15e Desktop Barcode Scanner FBA", "finalName": "HT15E" },
+  "B0DJK3GNCY": { "sellerSku": "helett WS5", "finalName": "helett WS5" },
+  "B01DYJ8R4O": { "sellerSku": "UNIC UC30 PROJECTOR", "finalName": "UNIC UC30 PROJECTOR" },
+  "B0DW8PCP6D": { "sellerSku": "Helett 4x6 Thermal Label", "finalName": "Helett 4x6 Thermal Label" },
+  "B0D9KKFVT6": { "sellerSku": "UNIY UY720 Smart Door Lock FBA", "finalName": "UNIY UY720 Smart Door Lock FBA" },
+  "B0BL3LJHRB": { "sellerSku": "UY46 old", "finalName": "UY46 old" },
+  "B08FC23JD7": { "sellerSku": "UC20 projector", "finalName": "UC20 projector" },
+  "B0CZ99K438": { "sellerSku": "H80i Autocut Thermal Printer", "finalName": "H80i Autocut Thermal Printer" },
+  "B07T2VZMSG": { "sellerSku": "HTPHT580BLACK", "finalName": "HTPHT580BLACK" },
+  "B0DDL3TR1L": { "sellerSku": "helett HE24 Label Printer", "finalName": "HE24 mini printer" },
+  "B0CPDPTHVN": { "sellerSku": "Helett Ht20 Barcode Scanner", "finalName": "HT20 barcode" },
+  "B0D9KJJ7WF": { "sellerSku": "D8-ZNA6-NT4M", "finalName": "D8-ZNA6-NT4M" },
+  "B07FDG8GQT": { "sellerSku": "1UC46Projector", "finalName": "1UC46Projector" },
+  "B01H35Y352": { "sellerSku": "UC 30 Project 3", "finalName": "UC 30 Project 3" },
+  "B07MK547MK": { "sellerSku": "UC46 90", "finalName": "UC46 90" },
+  "B0GSZRF4M5": { "sellerSku": "Helett Z567 Tyre Inflator NEW", "finalName": "Helett Z567 Tyre Inflator NEW" },
+  "B0C3HZDJ5C": { "sellerSku": "ZT-NKSW-TLDE", "finalName": "ZT-NKSW-TLDE" },
+  "B0FL2VFCT9": { "sellerSku": "HE24 Thermal Label 12x50", "finalName": "HE24 Labell Roll (12x50)" },
+  "B0C96F68YL": { "sellerSku": "helett HT8400 car power inverter", "finalName": "helett HT8400 car power inverter" },
+  "B0D1P7SC46": { "sellerSku": "Helett H65C 2in1 Thermal Printer", "finalName": "Helett H65C 2in1 Thermal Printer" },
+  "B0BRXVQ85M": { "sellerSku": "UNIY UY20+ Mini Led projector", "finalName": "UNIY UY20+ Mini Led projector" },
+  "B0DTNVQ34H": { "sellerSku": "HE24 Label Tape", "finalName": "12x30 HE24 labels" },
+  "B0FLV3V1W4": { "sellerSku": "Helett H65Clite Printer", "finalName": "H65C Lite" },
+  "B0FZSCW83R": { "sellerSku": "Helett H75C Printer", "finalName": "H65C Mini Printer (New)" },
+  "B0BD9191XX": { "sellerSku": "UY400 mini Led Projector", "finalName": "UY400 mini Led Projector" },
+  "B0FGCT1MWB": { "sellerSku": "Helett Ht15 Desktop Barcode Scanner", "finalName": "HT15 wired desktop scanner" },
+  "B0DQGSMG4N": { "sellerSku": "Helett Label Paper 4x6", "finalName": "Helett Label Paper 4x6" },
+  "B091TCSG4D": { "sellerSku": "UNIY UY200", "finalName": "UNIY UY200" },
+  "B0CR75SMCQ": { "sellerSku": "H41", "finalName": "H41" },
+  "B07T85LWH7": { "sellerSku": "Yuntab 7 inch 3G Unlocked", "finalName": "Yuntab 7 inch 3G Unlocked" },
+  "B09TY1SZP6": { "sellerSku": "New UY46 FBA", "finalName": "New UY46 FBA" },
+  "B0DTQ3ZCBH": { "sellerSku": "HE24 Thermal Label Tape", "finalName": "15X50 HE24 labels" },
+  "B0DRL8ZDWX": { "sellerSku": "Helett H30C Lite Printer", "finalName": "Helett H30C Lite Printer" },
+  "B086ZFW6HD": { "sellerSku": "FILPO Soap Dispenser", "finalName": "FILPO Soap Dispenser" },
+  "B0BJMLX4RR": { "sellerSku": "UY10 Wired Mic", "finalName": "UY10 Wired Mic" },
+  "B0CQTK12SW": { "sellerSku": "Rice-Cooker-Black", "finalName": "Rice-Cooker-Black" },
+  "B0DQGQY98X": { "sellerSku": "Helett HE760 Mobile Printer", "finalName": "Helett HE760 Mobile Printer" },
+  "B09K4M1JSN": { "sellerSku": "UNIY UY 46 Projector", "finalName": "UNIY UY 46 Projector" },
+  "B0D9T8R3W8": { "sellerSku": "Helett H01 Label Holder FBA", "finalName": "H01 Label Holder" },
+  "B09TWLRXZ3": { "sellerSku": "UNIY A1 128 GB SdCard", "finalName": "UNIY A1 128 GB SdCard" },
+  "B0FKZPDH66": { "sellerSku": "Helett H30C Pro Printer", "finalName": "H30C pro Aiyin" },
+  "B07Q5PC3SV": { "sellerSku": "UC 40+ Projector", "finalName": "UC 40+ Projector" },
+  "B0F6MXY655": { "sellerSku": "HT20proL Wirelss Barcode Scanner MFN", "finalName": "HT20proL Wirelss Barcode Scanner MFN" },
+  "B0BRN9ZGL1": { "sellerSku": "UY-TTH9-BCAS", "finalName": "UY-TTH9-BCAS" },
+  "B0BLV54ZQK": { "sellerSku": "UY 14 UHF Wireless MIC", "finalName": "UY 14 wireless mic" },
+  "B0CC8ZFPRX": { "sellerSku": "HT510 Barcode Scanner", "finalName": "HT510 Barcode Scanner" },
+  "B0DD7RS56N": { "sellerSku": "Helett Z567 Tyre Inflator FBA", "finalName": "Helett Z567 Tyre Inflator FBA" },
+  "B0CB8X5RCN": { "sellerSku": "UNIY UY85 kids smart watch", "finalName": "UNIY UY85 kids smart watch" },
+  "B0C8NNB48Z": { "sellerSku": "UY510 Barcode Scanner", "finalName": "UY510 Barcode Scanner" },
+  "B08PSLZYZV": { "sellerSku": "UC20 mini projector", "finalName": "UC20 mini projector" },
+  "B0DBCW1PS4": { "sellerSku": "UNIY UY720 Smartdoor Lock FBA", "finalName": "UY720 door lock" },
+  "B0CQM5THV3": { "sellerSku": "ECO- D3-BT", "finalName": "BT Sound bar" },
+  "B0GDKY6QHN": { "sellerSku": "Helett infiStick android stick", "finalName": "Helett infiStick Tv Stick" },
+  "B0FGTMFZFM": { "sellerSku": "MO-DT5V-SO2M", "finalName": "MO-DT5V-SO2M" },
+  "B0DGCG6MN4": { "sellerSku": "Helett HE760 Receipt Printer FBA", "finalName": "Helett HE760 Receipt Printer FBA" },
+  "B0CR7JGRYJ": { "sellerSku": "SKU: OFFICE_LOCK_BLACK_30-100", "finalName": "SKU: OFFICE_LOCK_BLACK_30-100" },
+  "B0FHQSL9DH": { "sellerSku": "Helett H30CPro Printer", "finalName": "Helett H30CPro Printer" },
+  "B0CMMMJ5WY": { "sellerSku": "Helett HT35 Dual microphone", "finalName": "Helett HT35 Dual microphone" }
+};
+
+function resolveSkuName(asin, fallback) {
+  const entry = SKU_MAP[asin.toUpperCase()];
+  if (entry && entry.sellerSku && entry.sellerSku.trim()) return entry.sellerSku.trim();
+  return fallback || asin;
+}
+
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let allRows=[],filteredRows=[];
+let sortCol=null,sortDir=-1;
+let chips=new Set();
+let barChart=null,donutChart=null,costBarChart=null,costDonutChart=null;
+let dbgLog=[];
+
+// ══════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════
+const $=id=>document.getElementById(id);
+const set=(id,v)=>{const e=$(id);if(e)e.textContent=v;};
+const norm=v=>String(v??'').trim().toUpperCase();
+const str=v=>String(v??'').trim();
+const toNum=v=>{if(v===''||v==null)return 0;const n=parseFloat(String(v).replace(/,/g,''));return isNaN(n)?0:Math.round(n);};
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fmtCur=v=>v>=1e6?'₹ '+(v/1e5).toFixed(1)+'L':v>=1000?'₹ '+(v/1000).toFixed(1)+'K':'₹ '+v.toFixed(0);
+const fmtCurFull=v=>'₹'+v.toLocaleString('en-IN',{maximumFractionDigits:2});
+function dbg(...a){const s=a.join(' ');dbgLog.push(s);console.log('[INV]',s);}
+function step(s){const e=$('lstep');if(e)e.textContent=s;}
+
+// ══════════════════════════════════════════
+// EXCEL DOWNLOAD
+// ══════════════════════════════════════════
+function downloadExcel(){
+  if(!filteredRows||!filteredRows.length){alert('No data to export.');return;}
+  const exportData = filteredRows.map(r => {
+    const flags = r.issues && r.issues.length ? r.issues.map(i => i.label).join(', ') : 'OK';
+    return {
+      'SKU':             r.sku,
+      'ASIN':            r.asin,
+      'FC Sellable':     r.fc_sellable,
+      'FC Unsellable':   r.fc_unsellable,
+      'FBA Available':   r.fba_available,
+      'FBA Unsellable':  r.fba_unsellable,
+      'Inbound':         r.inbound,
+      'Total Sellable':  r.total,
+      'Unit Cost (₹)':   r.unit_cost > 0 ? r.unit_cost : '',
+      'Total Cost (₹)':  r.total_cost > 0 ? r.total_cost : '',
+      'Status Flags':    flags
+    };
+  });
+  const ws = XLSX.utils.json_to_sheet(exportData);
+  ws['!cols'] = [{wch:40},{wch:16},{wch:12},{wch:14},{wch:13},{wch:14},{wch:10},{wch:10},{wch:14},{wch:16},{wch:35}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Inventory');
+  const today = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `Helett_Inventory_${today}.xlsx`);
+}
+
+// ══════════════════════════════════════════
+// FETCH
+// ══════════════════════════════════════════
+async function fetchData(){
+  step('Fetching spreadsheet…');
+  const r=await fetch(SHEET_URL);
+  if(!r.ok)throw new Error(`HTTP ${r.status} ${r.statusText}`);
+  const ab=await r.arrayBuffer();
+  dbg('Bytes:',ab.byteLength);
+  return ab;
+}
+
+// ══════════════════════════════════════════
+// PARSE
+// ══════════════════════════════════════════
+function findSheet(wb,name){
+  const lo=name.toLowerCase().replace(/[^a-z0-9]/g,'');
+  return wb.SheetNames.find(s=>s.toLowerCase()===name.toLowerCase())
+      || wb.SheetNames.find(s=>s.toLowerCase().replace(/[^a-z0-9]/g,'')===lo)
+      || wb.SheetNames.find(s=>s.toLowerCase().replace(/[^a-z0-9]/g,'').includes(lo.slice(0,6)))
+      || null;
+}
+
+function sheetToRows(ws){
+  if(!ws||!ws['!ref'])return[];
+  const range=XLSX.utils.decode_range(ws['!ref']);
+  let hRow=range.s.r;
+  outer:for(let r=range.s.r;r<=Math.min(range.s.r+8,range.e.r);r++){
+    for(let c=range.s.c;c<=range.e.c;c++){
+      const cell=ws[XLSX.utils.encode_cell({r,c})];
+      if(cell&&String(cell.v||'').toLowerCase().match(/\basin\b|^sku$/)){hRow=r;break outer;}
+    }
+  }
+  const ref=XLSX.utils.encode_range({s:{r:hRow,c:range.s.c},e:range.e});
+  const sub={...ws,'!ref':ref};
+  const rows=XLSX.utils.sheet_to_json(sub,{defval:''});
+  return rows.filter(row=>Object.values(row).some(v=>v!==''));
+}
+
+function parseSheets(ab){
+  step('Parsing…');
+  const wb=XLSX.read(ab,{type:'array'});
+  dbg('Sheets:',wb.SheetNames.join(', '));
+  const sN=findSheet(wb,SH_SELL),uN=findSheet(wb,SH_UN),fN=findSheet(wb,SH_FBA),rN=findSheet(wb,SH_RPT);
+  if(!sN)throw new Error(`Sheet "${SH_SELL}" not found. Available: ${wb.SheetNames.join(', ')}`);
+  if(!uN)throw new Error(`Sheet "${SH_UN}" not found. Available: ${wb.SheetNames.join(', ')}`);
+  if(!fN)throw new Error(`Sheet "${SH_FBA}" not found. Available: ${wb.SheetNames.join(', ')}`);
+  dbg('Mapped →',sN,'|',uN,'|',fN,'| report:',(rN||'NOT FOUND'));
+  const sell=sheetToRows(wb.Sheets[sN]);
+  const unsell=sheetToRows(wb.Sheets[uN]);
+  const fba=sheetToRows(wb.Sheets[fN]);
+  const rpt=rN?sheetToRows(wb.Sheets[rN]):[];
+  dbg('Rows → sell:',sell.length,'unsell:',unsell.length,'fba:',fba.length,'rpt:',rpt.length);
+  return{sell,unsell,fba,rpt};
+}
+
+// ══════════════════════════════════════════
+// COLUMN DETECTION
+// ══════════════════════════════════════════
+function detectCol(headers,patterns){
+  const lo=headers.map(h=>String(h).toLowerCase().replace(/[\s_\-]/g,''));
+  for(const p of patterns){
+    const cp=p.replace(/[\s_\-]/g,'');
+    let i=lo.findIndex(h=>h===cp);
+    if(i!==-1)return headers[i];
+    i=lo.findIndex(h=>h.includes(cp));
+    if(i!==-1)return headers[i];
+  }
+  return null;
+}
+
+// ══════════════════════════════════════════
+// BUILD INBOUND MAP from FBAInvReport
+// ══════════════════════════════════════════
+function buildInboundMap(rpt){
+  const bySkuMap  = new Map();
+  const byAsinMap = new Map();
+
+  if(!rpt.length){
+    dbg('FBAInvReport: sheet empty or not found, inbound will be 0 for all SKUs');
+    return {bySkuMap, byAsinMap};
+  }
+
+  const rh = Object.keys(rpt[0]);
+  const rSkuCol  = detectCol(rh, ['seller-sku','sellersku','sku','msku','merchant-sku']);
+  const rAsinCol = detectCol(rh, ['asin']);
+  const rQtyCol  = detectCol(rh, ['inbound-quantity','inboundquantity','inbound quantity','inbound-qty','inboundqty','inbound']);
+
+  dbg('FBAInvReport cols → sku:',rSkuCol,'asin:',rAsinCol,'inbound-qty:',rQtyCol);
+
+  if(!rQtyCol){
+    dbg('WARNING: inbound-quantity column not found in FBAInvReport. Headers:',rh.join(', '));
+    return {bySkuMap, byAsinMap};
+  }
+
+  for(const row of rpt){
+    const qty = toNum(row[rQtyCol]);
+    if(!qty) continue;
+
+    if(rSkuCol){
+      const sku = norm(row[rSkuCol]);
+      if(sku && sku !== 'SELLER-SKU' && sku !== 'SKU'){
+        bySkuMap.set(sku, (bySkuMap.get(sku)||0) + qty);
+      }
+    }
+    if(rAsinCol){
+      const asin = norm(row[rAsinCol]);
+      if(asin && asin !== 'ASIN'){
+        byAsinMap.set(asin, (byAsinMap.get(asin)||0) + qty);
+      }
+    }
+  }
+
+  dbg('Inbound map → by-sku entries:',bySkuMap.size,'by-asin entries:',byAsinMap.size);
+  return {bySkuMap, byAsinMap};
+}
+
+// ══════════════════════════════════════════
+// MERGE
+// ══════════════════════════════════════════
+function mergeData(sell,unsell,fba,rpt){
+  step('Merging by ASIN…');
+
+  const {bySkuMap, byAsinMap} = buildInboundMap(rpt);
+
+  const sh=sell.length?Object.keys(sell[0]):[];
+  const sc={
+    asin: detectCol(sh,['asin']),
+    sku:  detectCol(sh,['sku','msku','sellersku','merchantsku']),
+    qty:  detectCol(sh,['sellable stock','sellablestock','sellable','sellableqty','availableqty','quantity','qty','stock','units','available']),
+  };
+
+  const uh=unsell.length?Object.keys(unsell[0]):[];
+  const uc={
+    asin: detectCol(uh,['asin']),
+    sku:  detectCol(uh,['sku','msku','sellersku']),
+  };
+  const skipU=new Set([uc.asin,uc.sku].filter(Boolean));
+  const dateCols=uh.filter(h=>!skipU.has(h)&&h!=='');
+  const lastDC=dateCols.length?dateCols[dateCols.length-1]:null;
+
+  const fh=fba.length?Object.keys(fba[0]):[];
+  const fc={
+    asin:      detectCol(fh,['asin']),
+    sku:       detectCol(fh,['seller-sku','sellersku','sku','msku']),
+    condition: detectCol(fh,['warehouse-condition-code','warehouseconditioncode','warehouse-condition','conditioncode']),
+    qty:       detectCol(fh,['quantity available','quantityavailable','qty available','quantity','qty']),
+    avail:     detectCol(fh,['afnfulfillable','fulfillable','fulfillablequantity','afnavailablequantity']),
+    unsell:    detectCol(fh,['afnunsellable','unsellablequantity','unfulfillable']),
+  };
+
+  if(!fc.asin)throw new Error('ASIN column not found in FBA sheet.\nHeaders: '+fh.join(', '));
+
+  const sellMap=new Map(),sellSku=new Map();
+  if(sc.asin&&sc.qty){
+    for(const row of sell){
+      const asin=norm(row[sc.asin]);
+      // ── BLOCKLIST CHECK ──
+      if(!asin||asin==='-'||asin==='ASIN'||ASIN_BLOCKLIST.has(asin))continue;
+      sellMap.set(asin,(sellMap.get(asin)||0)+toNum(row[sc.qty]));
+      const sku=str(row[sc.sku]||'');
+      if(sku&&!sellSku.has(asin))sellSku.set(asin,sku);
+    }
+  }
+
+  const unMap=new Map();
+  if(uc.asin&&lastDC){
+    for(const row of unsell){
+      const asin=norm(row[uc.asin]);
+      // ── BLOCKLIST CHECK ──
+      if(!asin||asin==='-'||asin==='ASIN'||ASIN_BLOCKLIST.has(asin))continue;
+      unMap.set(asin,(unMap.get(asin)||0)+toNum(row[lastDC]));
+    }
+  }
+
+  const fbaAvailMap=new Map(), fbaUnsellMap=new Map(), fbaSkuMap=new Map();
+  const useConditionFormat = !!(fc.condition && fc.qty);
+
+  if(useConditionFormat){
+    for(const row of fba){
+      const asin=norm(row[fc.asin]);
+      // ── BLOCKLIST CHECK ──
+      if(!asin||asin==='-'||asin==='ASIN'||ASIN_BLOCKLIST.has(asin))continue;
+      const sku=str(row[fc.sku]||'');
+      const condition=norm(row[fc.condition]);
+      const qty=toNum(row[fc.qty]);
+      if(sku&&!fbaSkuMap.has(asin))fbaSkuMap.set(asin,sku);
+      if(condition==='SELLABLE'){
+        fbaAvailMap.set(asin,(fbaAvailMap.get(asin)||0)+qty);
+      } else {
+        fbaUnsellMap.set(asin,(fbaUnsellMap.get(asin)||0)+qty);
+      }
+    }
+  } else {
+    for(const row of fba){
+      const asin=norm(row[fc.asin]);
+      // ── BLOCKLIST CHECK ──
+      if(!asin||asin==='-'||asin==='ASIN'||ASIN_BLOCKLIST.has(asin))continue;
+      const sku=str(row[fc.sku]||'');
+      if(sku&&!fbaSkuMap.has(asin))fbaSkuMap.set(asin,sku);
+      fbaAvailMap.set(asin,(fbaAvailMap.get(asin)||0)+toNum(fc.avail?row[fc.avail]:0));
+      fbaUnsellMap.set(asin,(fbaUnsellMap.get(asin)||0)+toNum(fc.unsell?row[fc.unsell]:0));
+    }
+  }
+
+  function resolveInbound(resolvedSku, asin){
+    const skuKey = norm(resolvedSku);
+    if(bySkuMap.has(skuKey)) return bySkuMap.get(skuKey);
+    const asinKey = norm(asin);
+    if(byAsinMap.has(asinKey)) return byAsinMap.get(asinKey);
+    return 0;
+  }
+
+  const merged=[];
+  const fbaSet=new Set([...fbaAvailMap.keys(),...fbaUnsellMap.keys(),...fbaSkuMap.keys()]);
+
+  for(const asin of fbaSet){
+    // ── BLOCKLIST CHECK (safety net) ──
+    if(ASIN_BLOCKLIST.has(asin))continue;
+    const sku        = resolveSkuName(asin, fbaSkuMap.get(asin)||'--');
+    const fbaAvail   = fbaAvailMap.get(asin)||0;
+    const fbaUnsell  = fbaUnsellMap.get(asin)||0;
+    const hasFCMatch = sellMap.has(asin)||unMap.has(asin);
+    const fcSell     = sellMap.get(asin)??0;
+    const fcUnsell   = unMap.get(asin)??0;
+    const total      = (hasFCMatch?fcSell:0)+fbaAvail;
+    const inbound    = resolveInbound(sku, asin);
+    const unit_cost  = COST_MAP[asin]||0;
+    const total_cost = unit_cost * total;
+    const issues     = buildIssues({hasFCMatch,isFCOnly:false,fcSell,fbaAvail,fcUnsell,fbaUnsell,total});
+    merged.push({sku,asin,fc_sellable:hasFCMatch?fcSell:0,fc_unsellable:hasFCMatch?fcUnsell:0,fba_available:fbaAvail,fba_unsellable:fbaUnsell,inbound,total,unit_cost,total_cost,hasFCMatch,source:'fba',issues,issue_count:issues.length});
+  }
+
+  const allFCAsins=new Set([...sellMap.keys(),...unMap.keys()]);
+  for(const asin of allFCAsins){
+    // ── BLOCKLIST CHECK (safety net) ──
+    if(ASIN_BLOCKLIST.has(asin))continue;
+    if(fbaSet.has(asin))continue;
+    const fcSell   = sellMap.get(asin)??0;
+    const fcUnsell = unMap.get(asin)??0;
+    const sku      = resolveSkuName(asin, sellSku.get(asin)||'--');
+    const total    = fcSell;
+    const inbound  = resolveInbound(sku, asin);
+    const unit_cost  = COST_MAP[asin]||0;
+    const total_cost = unit_cost * total;
+    const issues   = buildIssues({hasFCMatch:true,isFCOnly:true,fcSell,fbaAvail:0,fcUnsell,fbaUnsell:0,total});
+    merged.push({sku,asin,fc_sellable:fcSell,fc_unsellable:fcUnsell,fba_available:0,fba_unsellable:0,inbound,total,unit_cost,total_cost,hasFCMatch:true,source:'fc',issues,issue_count:issues.length});
+  }
+
+  dbg('Merged (after blocklist):',merged.length);
+  return merged;
+}
+
+// ══════════════════════════════════════════
+// ISSUE BUILDER
+// ══════════════════════════════════════════
+function buildIssues({hasFCMatch,isFCOnly,fcSell,fbaAvail,fcUnsell,fbaUnsell,total}){
+  const issues=[];
+  if(!hasFCMatch){
+    issues.push({type:'mm',label:'ASIN Mismatch',msg:'This ASIN is present in FBA inventory but was not found in any FC sheet. FC Sellable and Unsellable values will show as 0.'});
+  }
+  if(isFCOnly){
+    issues.push({type:'fo',label:'FC Only',msg:'This ASIN exists in the FC sheets but has no matching FBA inventory record. FBA values are shown as 0.'});
+  }
+  if(total>0&&total<50){
+    issues.push({type:'ls',label:'Low Stock',msg:`Total sellable is ${total} units, which is below the low-stock threshold of 50. Consider restocking soon.`});
+  }
+  if(total===0&&!isFCOnly&&hasFCMatch){
+    issues.push({type:'ls',label:'Out of Stock',msg:'Total sellable units is 0. No stock available in FC or FBA.'});
+  }
+  const totUn=fcUnsell+fbaUnsell;
+  if(totUn>0&&total>0&&totUn>=total){
+    issues.push({type:'hu',label:'High Unsellable',msg:`Unsellable units (${totUn}) equals or exceeds sellable (${total}). Review condition, disposal or reprocessing.`});
+  } else if(totUn>0&&total>0&&totUn/total>0.4){
+    issues.push({type:'hu',label:'High Unsellable',msg:`Unsellable (${totUn}) is ${Math.round(totUn/total*100)}% of sellable (${total}), above the 40% warning threshold.`});
+  }
+  return issues;
+}
+
+// ══════════════════════════════════════════
+// KPIs
+// ══════════════════════════════════════════
+function renderKPIs(rows){
+  set('k0',rows.reduce((s,r)=>s+r.total,0).toLocaleString());
+  set('k1',rows.reduce((s,r)=>s+r.fc_sellable,0).toLocaleString());
+  set('k2',rows.reduce((s,r)=>s+r.fba_available,0).toLocaleString());
+  set('k7',rows.reduce((s,r)=>s+r.inbound,0).toLocaleString());
+  set('k3',rows.reduce((s,r)=>s+r.fc_unsellable+r.fba_unsellable,0).toLocaleString());
+  set('k4',rows.filter(r=>r.total>=0&&r.total<50).length.toLocaleString());
+  set('k5',rows.filter(r=>r.issue_count>0).length.toLocaleString());
+  const totalCost = rows.reduce((s,r)=>s+r.total_cost,0);
+  set('k6', fmtCur(totalCost));
+  $('k6').title = fmtCurFull(totalCost);
+}
+
+// ══════════════════════════════════════════
+// CHARTS
+// ══════════════════════════════════════════
+function renderCharts(rows){
+  const top15=[...rows].filter(r=>r.fc_sellable>0||r.fba_available>0||r.inbound>0)
+    .sort((a,b)=>(b.fc_sellable+b.fba_available)-(a.fc_sellable+a.fba_available))
+    .slice(0,15);
+  const labels=top15.map(r=>{const s=str(r.sku);return s.length>16?s.slice(0,15)+'…':s;});
+
+  if(barChart)barChart.destroy();
+  barChart=new Chart($('cbar').getContext('2d'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'FC Sellable',data:top15.map(r=>r.fc_sellable),backgroundColor:'rgba(99,102,241,0.8)',borderColor:'#6366f1',borderWidth:1,borderRadius:4,borderSkipped:false},
+      {label:'FBA Available',data:top15.map(r=>r.fba_available),backgroundColor:'rgba(56,189,248,0.8)',borderColor:'#38bdf8',borderWidth:1,borderRadius:4,borderSkipped:false},
+      {label:'Inbound',data:top15.map(r=>r.inbound),backgroundColor:'rgba(244,114,182,0.8)',borderColor:'#f472b6',borderWidth:1,borderRadius:4,borderSkipped:false},
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{backgroundColor:'#0a0b10',borderColor:'#2a2d3e',borderWidth:1,titleColor:'#e8eaf6',bodyColor:'#9395a5',padding:10,callbacks:{title:items=>top15[items[0].dataIndex].sku}},
+      },
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#5f6170',font:{size:10,family:'IBM Plex Mono'},maxRotation:35}},
+        y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#5f6170',font:{size:10,family:'IBM Plex Mono'}}},
+      }
+    }
+  });
+
+  const fcUn=rows.reduce((s,r)=>s+r.fc_unsellable,0);
+  const fbaUn=rows.reduce((s,r)=>s+r.fba_unsellable,0);
+  const grand=fcUn+fbaUn;
+  set('dtotal',grand.toLocaleString());
+  set('dl0',`FC — ${fcUn.toLocaleString()}`);
+  set('dl1',`FBA — ${fbaUn.toLocaleString()}`);
+
+  if(donutChart)donutChart.destroy();
+  const hasD=grand>0;
+  donutChart=new Chart($('cdonut').getContext('2d'),{
+    type:'doughnut',
+    data:{
+      labels:['FC Unsellable','FBA Unsellable'],
+      datasets:[{data:hasD?[fcUn,fbaUn]:[1,1],backgroundColor:hasD?['rgba(167,139,250,0.85)','rgba(245,158,11,0.85)']:['rgba(60,63,90,0.4)','rgba(60,63,90,0.4)'],borderColor:'#1e2130',borderWidth:2,hoverOffset:6}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{display:false},tooltip:{enabled:hasD,backgroundColor:'#0a0b10',borderColor:'#2a2d3e',borderWidth:1,titleColor:'#e8eaf6',bodyColor:'#9395a5',padding:10}}}
+  });
+
+  const costRows = [...rows].filter(r=>r.total_cost>0).sort((a,b)=>b.total_cost-a.total_cost).slice(0,15);
+  const costLabels = costRows.map(r=>{const s=str(r.sku);return s.length>16?s.slice(0,15)+'…':s;});
+
+  if(costBarChart)costBarChart.destroy();
+  costBarChart=new Chart($('ccostbar').getContext('2d'),{
+    type:'bar',
+    data:{labels:costLabels,datasets:[{
+      label:'Total Cost (₹)',
+      data:costRows.map(r=>r.total_cost),
+      backgroundColor:'rgba(20,184,166,0.75)',
+      borderColor:'#14b8a6',
+      borderWidth:1,borderRadius:4,borderSkipped:false
+    }]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{backgroundColor:'#0a0b10',borderColor:'#2a2d3e',borderWidth:1,titleColor:'#e8eaf6',bodyColor:'#9395a5',padding:10,
+          callbacks:{
+            title:items=>costRows[items[0].dataIndex].sku,
+            label:items=>`₹${items.raw.toLocaleString('en-IN',{maximumFractionDigits:0})} (${costRows[items.dataIndex].total} units × ₹${costRows[items.dataIndex].unit_cost.toLocaleString('en-IN')})`
+          }
+        },
+      },
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#5f6170',font:{size:10,family:'IBM Plex Mono'},maxRotation:35}},
+        y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#5f6170',font:{size:10,family:'IBM Plex Mono'},callback:v=>fmtCur(v)}},
+      }
+    }
+  });
+
+  const top10cost = [...rows].filter(r=>r.unit_cost>0).sort((a,b)=>b.unit_cost-a.unit_cost).slice(0,10);
+  const totalPortfolioCost = rows.reduce((s,r)=>s+r.total_cost,0);
+  set('dctotal', fmtCur(totalPortfolioCost));
+
+  const donutColors = ['#14b8a6','#6366f1','#f59e0b','#38bdf8','#a78bfa','#22c55e','#ef4444','#fb923c','#e879f9','#64748b'];
+
+  if(costDonutChart)costDonutChart.destroy();
+  const hasCost = top10cost.some(r=>r.total_cost>0);
+  costDonutChart=new Chart($('ccostdonut').getContext('2d'),{
+    type:'doughnut',
+    data:{
+      labels:top10cost.map(r=>r.sku),
+      datasets:[{
+        data:hasCost?top10cost.map(r=>r.total_cost>0?r.total_cost:0.001):[1],
+        backgroundColor:hasCost?donutColors.slice(0,top10cost.length):['rgba(60,63,90,0.4)'],
+        borderColor:'#1e2130',borderWidth:2,hoverOffset:6
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{
+      legend:{display:false},
+      tooltip:{enabled:hasCost,backgroundColor:'#0a0b10',borderColor:'#2a2d3e',borderWidth:1,titleColor:'#e8eaf6',bodyColor:'#9395a5',padding:10,
+        callbacks:{
+          label:ctx=>`₹${ctx.raw.toLocaleString('en-IN',{maximumFractionDigits:0})} (${totalPortfolioCost>0?Math.round(ctx.raw/totalPortfolioCost*100):0}%)`
+        }
+      }
+    }}
+  });
+
+  const leg = $('costdonutlegend');
+  leg.innerHTML = top10cost.map((r,i)=>`
+    <div class="dl-item">
+      <div class="dl-sw" style="background:${donutColors[i]}"></div>
+      <span style="font-size:.63rem;color:var(--text2);">${r.sku.length>18?r.sku.slice(0,17)+'…':r.sku}</span>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════
+// TABLE
+// ══════════════════════════════════════════
+function renderTable(rows){
+  const tbody=$('tbody');
+  set('rbadge',`${rows.length.toLocaleString()} rows`);
+  set('tfc',`Showing ${rows.length.toLocaleString()} of ${allRows.length.toLocaleString()} entries`);
+  if(!rows.length){
+    tbody.innerHTML=`<tr><td colspan="11"><div class="empty"><div class="ei">📦</div><p>No rows match the current filter.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML=rows.map(r=>{
+    const tc=r.total<50&&r.total>=0?'ntot low':'ntot';
+    const unitCostHtml = r.unit_cost>0
+      ? `<td class="td-cost compact">${fmtCurFull(r.unit_cost)}</td>`
+      : `<td class="td-cost z compact">—</td>`;
+    const totalCostHtml = r.total_cost>0
+      ? `<td class="td-cost">${fmtCurFull(r.total_cost)}</td>`
+      : `<td class="td-cost z">—</td>`;
+    const inboundClass = r.inbound > 0 ? 'n ib compact' : 'n ib z compact';
+    return `<tr>
+      <td class="td-sku" title="${esc(r.sku)}">${esc(r.sku)}</td>
+      <td class="td-asin">${esc(r.asin)}</td>
+      <td class="n compact ${r.fc_sellable>0?'g':r.fc_sellable===0?'z':''}">${r.fc_sellable.toLocaleString()}</td>
+      <td class="n compact ${r.fc_unsellable>0?'w':'z'}">${r.fc_unsellable.toLocaleString()}</td>
+      <td class="n compact ${r.fba_available>0?'g':'z'}">${r.fba_available.toLocaleString()}</td>
+      <td class="n compact ${r.fba_unsellable>0?'w':'z'}">${r.fba_unsellable.toLocaleString()}</td>
+      <td class="${inboundClass}">${r.inbound > 0 ? r.inbound.toLocaleString() : '—'}</td>
+      <td class="${tc} compact">${r.total.toLocaleString()}</td>
+      ${unitCostHtml}
+      ${totalCostHtml}
+      <td class="td-st">${badgeHtml(r)}</td>
+    </tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('.th').forEach(el=>{
+    el.addEventListener('click',e=>{
+      e.stopPropagation();
+      const was=el.classList.contains('to');
+      document.querySelectorAll('.th.to').forEach(x=>x.classList.remove('to'));
+      if(!was)el.classList.add('to');
+    });
+  });
+}
+
+function badgeHtml(r){
+  if(!r.issues||!r.issues.length)return '';
+  return '<div class="iw">'+r.issues.map(iss=>`
+    <span class="th" tabindex="0">
+      <span class="ibadge ${iss.type}">${iss.type==='mm'?'⚠':`${iss.type==='fo'?'◈':iss.type==='ls'?'↓':'↑'} ${esc(iss.label)}`}</span>
+      <div class="tb"><div class="tb-t">${esc(iss.label)}</div>${esc(iss.msg)}</div>
+    </span>`).join('')+'</div>';
+}
+
+document.addEventListener('click',()=>document.querySelectorAll('.th.to').forEach(x=>x.classList.remove('to')));
+
+// ══════════════════════════════════════════
+// FILTERS + SORT
+// ══════════════════════════════════════════
+function applyFilters(){
+  const q=$('sinput').value.trim().toLowerCase();
+  let rows=[...allRows];
+  if(chips.has('mm'))  rows=rows.filter(r=>r.issues.some(i=>i.type==='mm'));
+  if(chips.has('ls'))  rows=rows.filter(r=>r.issues.some(i=>i.type==='ls'));
+  if(chips.has('hu'))  rows=rows.filter(r=>r.issues.some(i=>i.type==='hu'));
+  if(chips.has('fo'))  rows=rows.filter(r=>r.issues.some(i=>i.type==='fo'));
+  if(q)rows=rows.filter(r=>r.sku.toLowerCase().includes(q)||r.asin.toLowerCase().includes(q));
+  if(sortCol){
+    rows.sort((a,b)=>{
+      const av=a[sortCol],bv=b[sortCol];
+      return(typeof av==='number'?(av-bv):String(av).localeCompare(String(bv)))*sortDir;
+    });
+  }
+  filteredRows=rows;
+  renderTable(rows);
+}
+
+function toggleChip(name){
+  chips.has(name)?chips.delete(name):chips.add(name);
+  const map={mm:'r',ls:'o',hu:'p',fo:'b'};
+  for(const[n,cls]of Object.entries(map)){
+    const el=$('ch'+n);
+    if(!el)continue;
+    el.className='chip';
+    if(chips.has(n))el.classList.add(cls);
+  }
+  applyFilters();
+}
+
+function sortBy(col){
+  if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=-1;}
+  document.querySelectorAll('.sarr').forEach(s=>s.textContent='↕');
+  document.querySelectorAll('th').forEach(t=>t.classList.remove('srt'));
+  const a=document.querySelector(`.sarr[data-col="${col}"]`);
+  if(a){a.textContent=sortDir===1?'↑':'↓';a.closest('th').classList.add('srt');}
+  applyFilters();
+}
+
+// ══════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════
+async function boot(){
+  const t0=performance.now();
+  try{
+    const ab=await fetchData();
+    const{sell,unsell,fba,rpt}=parseSheets(ab);
+    allRows=mergeData(sell,unsell,fba,rpt);
+    filteredRows=[...allRows];
+    renderKPIs(allRows);
+    renderCharts(allRows);
+    applyFilters();
+
+    const dp=$('dbg');
+    if(dbgLog.some(l=>l.includes('WARNING'))){dp.textContent='[Debug]\n'+dbgLog.join('\n');dp.style.display='block';}
+
+    $('scr-load').style.display='none';
+    $('scr-dash').style.display='block';
+    const ms=((performance.now()-t0)/1000).toFixed(2);
+    set('last-sync','Last synced: '+new Date().toLocaleString());
+    set('slbl','Live');
+    set('tft','Loaded in '+ms+'s');
+    $('sdot').className='sdot live';
+  }catch(err){
+    $('scr-load').style.display='none';
+    $('scr-err').style.display='block';
+    $('errbody').textContent=err.message+'\n\n[Debug Log]\n'+dbgLog.join('\n')+'\n\nNote: Sheet must be shared as "Anyone with the link can view".';
+    set('slbl','Error');
+    $('sdot').className='sdot err';
+  }
+}
+
+boot();
+</script>
+
+<footer style="text-align:center;padding:18px 0 22px;font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:#3a3d50;letter-spacing:0.06em;">
+  Designed and Developed by Amal Helett - 2026 Inventory Intelligence.
+</footer>
+</body>
+</html>
