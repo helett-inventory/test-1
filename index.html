@@ -281,7 +281,7 @@ td:last-child{border-right:none;}
 
   <!-- KPIs -->
   <div class="kpi-grid">
-    <div class="kpi cgr"><div class="kpi-lbl">Grand Total (All States)</div><div class="kpi-val" id="k_grand">—</div><div class="kpi-sub">Sellable + all transit</div></div>
+    <div class="kpi cgr"><div class="kpi-lbl">Grand Total (All States)</div><div class="kpi-val" id="k_grand">—</div><div class="kpi-sub">FC + FBA + Inbound + Processing</div></div>
     <div class="kpi ci"><div class="kpi-lbl">Total Sellable</div><div class="kpi-val" id="k0">—</div><div class="kpi-sub">FC + FBA combined</div></div>
     <div class="kpi cg"><div class="kpi-lbl">FC Sellable</div><div class="kpi-val" id="k1">—</div><div class="kpi-sub">Warehouse stock</div></div>
     <div class="kpi cb"><div class="kpi-lbl">FBA Available</div><div class="kpi-val" id="k2">—</div><div class="kpi-sub">Amazon fulfillable</div></div>
@@ -290,7 +290,7 @@ td:last-child{border-right:none;}
     <div class="kpi cp"><div class="kpi-lbl">Total Unsellable</div><div class="kpi-val" id="k3">—</div><div class="kpi-sub">FC + FBA unsellable</div></div>
     <div class="kpi co"><div class="kpi-lbl">Low Stock SKUs</div><div class="kpi-val" id="k4">—</div><div class="kpi-sub">Total sellable &lt; 50</div></div>
     <div class="kpi cr"><div class="kpi-lbl">Flagged SKUs</div><div class="kpi-val" id="k5">—</div><div class="kpi-sub">Rows with any issue</div></div>
-    <div class="kpi ct"><div class="kpi-lbl">Total Inventory Cost</div><div class="kpi-val" id="k6">—</div><div class="kpi-sub">Cost × total sellable</div></div>
+    <div class="kpi ct"><div class="kpi-lbl">Total Inventory Cost</div><div class="kpi-val" id="k6">—</div><div class="kpi-sub">Cost × grand total (all states)</div></div>
   </div>
 
   <!-- Stock Charts -->
@@ -738,14 +738,15 @@ function detectCol(headers,patterns){
 // ══════════════════════════════════════════
 function buildTransitMaps(rpt) {
   // Each map: key = ASIN (or SKU fallback), value = total units in that state
+  // NOTE: inbound-quantity is intentionally excluded — it is the SUM of working+shipped+received
+  // and including it alongside its sub-columns causes double-counting.
   const maps = {
-    inbound:    new Map(), // inbound-quantity: notified, shipment not yet created/sent
-    working:    new Map(), // inbound-working:  shipment plan created, not yet sent
+    working:    new Map(), // inbound-working:  shipment plan created, boxes not yet sent
     shipped:    new Map(), // inbound-shipped:  boxes in transit to Amazon FC
-    received:   new Map(), // inbound-received: Amazon received boxes, still counting
+    received:   new Map(), // inbound-received: Amazon received, still counting/processing
     fcTransfer: new Map(), // Reserved FC Transfer: moving between FCs
     fcProcess:  new Map(), // Reserved FC Processing: being labeled/prepped inside FC
-    custOrder:  new Map(), // Reserved Customer Order: reserved for pending orders
+    custOrder:  new Map(), // Reserved Customer Order: reserved for pending orders (already in available)
   };
 
   if (!rpt.length) {
@@ -759,9 +760,8 @@ function buildTransitMaps(rpt) {
   const cols = {
     sku:        detectCol(rh, ['seller-sku','sellersku','sku','msku','merchant-sku']),
     asin:       detectCol(rh, ['asin']),
-    // Pre-FC pipeline
-    inbound:    detectCol(rh, ['inbound-quantity','inboundquantity','inbound quantity','inbound qty']),
-    working:    detectCol(rh, ['inbound-working','inboundworking','working']),
+    // Pre-FC sub-columns only (NOT inbound-quantity which is their sum)
+    working:    detectCol(rh, ['inbound-working','inboundworking']),
     shipped:    detectCol(rh, ['inbound-shipped','inboundshipped']),
     received:   detectCol(rh, ['inbound-received','inboundreceived']),
     // Inside-FC states
@@ -772,7 +772,7 @@ function buildTransitMaps(rpt) {
 
   dbg('Transit cols resolved:', JSON.stringify(cols));
 
-  const dataFields = ['inbound','working','shipped','received','fcTransfer','fcProcess','custOrder'];
+  const dataFields = ['working','shipped','received','fcTransfer','fcProcess','custOrder'];
 
   for (const row of rpt) {
     const asin = cols.asin ? norm(row[cols.asin]) : null;
@@ -810,7 +810,6 @@ function resolveTransit(resolvedSku, asin, transitMaps) {
     return map.get(norm(asin)) || map.get(norm(resolvedSku)) || 0;
   }
 
-  const inbound    = get(transitMaps.inbound);
   const working    = get(transitMaps.working);
   const shipped    = get(transitMaps.shipped);
   const received   = get(transitMaps.received);
@@ -818,15 +817,15 @@ function resolveTransit(resolvedSku, asin, transitMaps) {
   const fcProcess  = get(transitMaps.fcProcess);
   const custOrder  = get(transitMaps.custOrder);
 
-  // "Inbound" as shown in dashboard = units that haven't reached the FC yet
-  // (working + shipped covers this; raw inbound-quantity is a superset that
-  // Amazon sometimes uses differently — include all to be safe)
-  const inboundTotal = inbound + working + shipped;
+  // inbound-quantity is intentionally NOT used — it is the sum of working+shipped+received
+  // so using it alongside these sub-columns causes double-counting.
+  // inbound    = working + shipped          (pre-FC: boxes not yet at Amazon)
+  // processing = received + fcT + fcP      (at FC but not yet available)
+  // custOrder is NOT added to grand_total — those units are already inside fba_available
+  const inboundTotal = working + shipped;
+  const processing   = received + fcTransfer + fcProcess;
 
-  // "Processing / Unavailable" = units Amazon has received but aren't available yet
-  const processing = received + fcTransfer + fcProcess;
-
-  return { inboundTotal, processing, fcTransfer, fcProcess, received, custOrder, working, shipped, inbound };
+  return { inboundTotal, processing, fcTransfer, fcProcess, received, custOrder, working, shipped };
 }
 
 // ══════════════════════════════════════════
@@ -925,10 +924,12 @@ function mergeData(sell, unsell, fba, rpt) {
 
     const transit    = resolveTransit(sku, asin, transitMaps);
     // Grand total = sellable + everything in-flight (zero disappearance guarantee)
-    const grand_total = total + transit.inboundTotal + transit.processing + transit.custOrder;
+    // grand_total = fc_sellable + fba_available + inbound (pre-FC) + processing (inside FC)
+    // NOTE: custOrder is NOT added — those units are already inside fba_available
+    const grand_total = total + transit.inboundTotal + transit.processing;
 
     const unit_cost  = COST_MAP[asin]||0;
-    const total_cost = unit_cost * total;
+    const total_cost = unit_cost * grand_total;
     const issues     = buildIssues({hasFCMatch,isFCOnly:false,fcSell,fbaAvail,fcUnsell,fbaUnsell,total,transit});
 
     merged.push({
@@ -961,10 +962,11 @@ function mergeData(sell, unsell, fba, rpt) {
     const total    = fcSell;
 
     const transit  = resolveTransit(sku, asin, transitMaps);
-    const grand_total = total + transit.inboundTotal + transit.processing + transit.custOrder;
+    // grand_total = fc_sellable + inbound + processing (no custOrder — already inside available)
+    const grand_total = total + transit.inboundTotal + transit.processing;
 
     const unit_cost  = COST_MAP[asin]||0;
-    const total_cost = unit_cost * total;
+    const total_cost = unit_cost * grand_total;
     const issues     = buildIssues({hasFCMatch:true,isFCOnly:true,fcSell,fbaAvail:0,fcUnsell,fbaUnsell:0,total,transit});
 
     merged.push({
@@ -1185,7 +1187,7 @@ function renderTable(rows){
       <td class="${inboundClass}">${r.inbound>0?r.inbound.toLocaleString():'—'}</td>
       <td class="${procClass}" title="Received: ${r.received||0}, FC Process: ${r.fc_process||0}, FC Transfer: ${r.fc_transfer||0}">${r.processing>0?r.processing.toLocaleString():'—'}</td>
       <td class="${tc} compact">${r.total.toLocaleString()}</td>
-      <td class="${grandClass}" title="Sellable + Inbound + Processing + Cust.Reserved">${r.grand_total.toLocaleString()}</td>
+      <td class="${grandClass}" title="FC Sellable + FBA Available + Inbound + Processing">${r.grand_total.toLocaleString()}</td>
       ${unitCostHtml}
       ${totalCostHtml}
       <td class="td-st">${badgeHtml(r)}</td>
