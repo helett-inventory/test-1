@@ -29,6 +29,7 @@
   --blue:       #38bdf8;
   --purple:     #a78bfa;
   --teal:       #14b8a6;
+  --yellow:     #fbbf24;
 }
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -69,6 +70,20 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 /* DEBUG */
 #dbg{display:none;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:20px;font-family:'IBM Plex Mono',monospace;font-size:.69rem;color:var(--text2);white-space:pre-wrap;line-height:1.7;}
 
+/* TRANSIT BANNER */
+.transit-banner{background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(99,102,241,.06));border:1px solid rgba(251,191,36,.2);border-radius:10px;padding:12px 18px;margin-bottom:18px;display:flex;align-items:center;gap:10px;font-size:.72rem;color:var(--text2);}
+.transit-banner strong{color:var(--yellow);font-weight:700;}
+.transit-breakdown{display:flex;gap:18px;flex-wrap:wrap;margin-top:6px;}
+.tb-stat{display:flex;flex-direction:column;gap:2px;}
+.tb-stat .tv{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:.82rem;}
+.tb-stat .tl{font-size:.62rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;}
+.tv.col-inbound{color:#f472b6;}
+.tv.col-processing{color:var(--yellow);}
+.tv.col-transfer{color:var(--teal);}
+.tv.col-received{color:var(--orange);}
+.tv.col-custorder{color:var(--purple);}
+.tv.col-grand{color:#4ade80;font-size:1rem;}
+
 /* KPI GRID */
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:14px;margin-bottom:22px;}
 .kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden;transition:border-color .2s;}
@@ -82,11 +97,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .kpi.cr::after{background:linear-gradient(90deg,#ef4444,#f87171);}
 .kpi.ct::after{background:linear-gradient(90deg,#14b8a6,#5eead4);}
 .kpi.cm::after{background:linear-gradient(90deg,#f472b6,#f9a8d4);}
+.kpi.cy::after{background:linear-gradient(90deg,#fbbf24,#fde68a);}
+.kpi.cgr::after{background:linear-gradient(90deg,#22c55e,#86efac);}
 .kpi-lbl{font-size:.63rem;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--text3);margin-bottom:10px;}
 .kpi-val{font-size:1.75rem;font-weight:800;line-height:1;letter-spacing:-.02em;}
 .kpi.ci .kpi-val{color:#818cf8;}.kpi.cg .kpi-val{color:#4ade80;}.kpi.cb .kpi-val{color:#7dd3fc;}
 .kpi.co .kpi-val{color:#fbbf24;}.kpi.cp .kpi-val{color:#c4b5fd;}.kpi.cr .kpi-val{color:#f87171;}
 .kpi.ct .kpi-val{color:#5eead4;}.kpi.cm .kpi-val{color:#f9a8d4;}
+.kpi.cy .kpi-val{color:#fde68a;}.kpi.cgr .kpi-val{color:#86efac;font-size:1.45rem;}
 .kpi-sub{font-size:.67rem;color:var(--text3);margin-top:6px;font-family:'IBM Plex Mono',monospace;}
 
 /* CHARTS ROW */
@@ -98,7 +116,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .chart-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 22px;}
 .chart-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
 .chart-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text2);}
-.bar-legend{display:flex;gap:12px;}
+.bar-legend{display:flex;gap:12px;flex-wrap:wrap;}
 .bl-item{display:flex;align-items:center;gap:5px;font-size:.67rem;color:var(--text3);}
 .bl-dot{width:8px;height:8px;border-radius:2px;}
 .bar-wrap{height:230px;}
@@ -128,6 +146,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .chip.o{background:#1c1205;border-color:var(--orange);color:var(--orange);}
 .chip.p{background:rgba(167,139,250,.1);border-color:var(--purple);color:var(--purple);}
 .chip.b{background:#041c2e;border-color:var(--blue);color:var(--blue);}
+.chip.y{background:rgba(251,191,36,.08);border-color:var(--yellow);color:var(--yellow);}
 .rbadge{height:30px;padding:0 10px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;font-family:'IBM Plex Mono',monospace;font-size:.69rem;color:var(--text3);display:flex;align-items:center;}
 
 /* DOWNLOAD BUTTON */
@@ -177,11 +196,16 @@ td:last-child{border-right:none;}
 .n.z{color:var(--text3);}
 .n.g{color:var(--green);}
 .n.w{color:var(--orange);}
-/* Inbound column styling — pink accent */
 .n.ib{color:#f9a8d4;}
 .n.ib.z{color:var(--text3);}
+/* Processing column — yellow */
+.n.proc{color:var(--yellow);}
+.n.proc.z{color:var(--text3);}
+/* Grand total column */
 .ntot{font-family:'IBM Plex Mono',monospace;font-weight:700;text-align:right;color:#4ade80;background:rgba(34,197,94,.05);}
 .ntot.low{color:var(--orange);background:rgba(245,158,11,.06);}
+/* Grand total col */
+.ngrand{font-family:'IBM Plex Mono',monospace;font-weight:800;text-align:right;color:#86efac;background:rgba(34,197,94,.08);}
 .td-cost{font-family:'IBM Plex Mono',monospace;font-weight:600;text-align:right;color:#5eead4;}
 .td-cost.z{color:var(--text3);}
 .td-st{width:1%;white-space:nowrap;}
@@ -193,8 +217,9 @@ td:last-child{border-right:none;}
 .ibadge.ls{background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);color:var(--orange);}
 .ibadge.hu{background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);color:var(--purple);}
 .ibadge.fo{background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:var(--blue);}
+.ibadge.tr{background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);color:var(--yellow);}
 .th{position:relative;display:inline-flex;}
-.tb{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#0a0b10;border:1px solid var(--border2);border-radius:8px;padding:9px 12px;min-width:200px;max-width:250px;font-size:.71rem;color:var(--text2);line-height:1.55;z-index:999;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.5);white-space:normal;word-break:break-word;}
+.tb{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#0a0b10;border:1px solid var(--border2);border-radius:8px;padding:9px 12px;min-width:200px;max-width:260px;font-size:.71rem;color:var(--text2);line-height:1.55;z-index:999;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.5);white-space:normal;word-break:break-word;}
 .tb::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#0a0b10;}
 .th:hover .tb,.th:focus .tb,.th.to .tb{display:block;}
 .tb-t{font-weight:700;color:var(--text);margin-bottom:3px;font-size:.72rem;}
@@ -237,12 +262,31 @@ td:last-child{border-right:none;}
 
   <div id="dbg"></div>
 
+  <!-- Transit State Banner -->
+  <div class="transit-banner" id="transit-banner" style="display:none;">
+    <div style="flex:1;">
+      <div style="font-weight:700;color:var(--yellow);margin-bottom:8px;font-size:.75rem;">▸ TRANSIT STATE TRACKER — Zero Disappearance Mode</div>
+      <div class="transit-breakdown">
+        <div class="tb-stat"><div class="tv col-inbound" id="tb-inbound">—</div><div class="tl">Inbound</div></div>
+        <div class="tb-stat"><div class="tv col-received" id="tb-received">—</div><div class="tl">Received (processing)</div></div>
+        <div class="tb-stat"><div class="tv col-processing" id="tb-processing">—</div><div class="tl">FC Processing</div></div>
+        <div class="tb-stat"><div class="tv col-transfer" id="tb-transfer">—</div><div class="tl">FC Transfer</div></div>
+        <div class="tb-stat"><div class="tv col-custorder" id="tb-custorder">—</div><div class="tl">Cust. Reserved</div></div>
+        <div class="tb-stat" style="border-left:1px solid var(--border);padding-left:18px;margin-left:4px;">
+          <div class="tv col-grand" id="tb-grand">—</div><div class="tl">Grand Total (all states)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- KPIs -->
   <div class="kpi-grid">
+    <div class="kpi cgr"><div class="kpi-lbl">Grand Total (All States)</div><div class="kpi-val" id="k_grand">—</div><div class="kpi-sub">Sellable + all transit</div></div>
     <div class="kpi ci"><div class="kpi-lbl">Total Sellable</div><div class="kpi-val" id="k0">—</div><div class="kpi-sub">FC + FBA combined</div></div>
     <div class="kpi cg"><div class="kpi-lbl">FC Sellable</div><div class="kpi-val" id="k1">—</div><div class="kpi-sub">Warehouse stock</div></div>
     <div class="kpi cb"><div class="kpi-lbl">FBA Available</div><div class="kpi-val" id="k2">—</div><div class="kpi-sub">Amazon fulfillable</div></div>
-    <div class="kpi cm"><div class="kpi-lbl">Total Inbound</div><div class="kpi-val" id="k7">—</div><div class="kpi-sub">Units in transit to FBA</div></div>
+    <div class="kpi cm"><div class="kpi-lbl">Total Inbound</div><div class="kpi-val" id="k7">—</div><div class="kpi-sub">Working + shipped (pre-FC)</div></div>
+    <div class="kpi cy"><div class="kpi-lbl">Processing / Unavailable</div><div class="kpi-val" id="k_processing">—</div><div class="kpi-sub">Received + FC proc + transfer</div></div>
     <div class="kpi cp"><div class="kpi-lbl">Total Unsellable</div><div class="kpi-val" id="k3">—</div><div class="kpi-sub">FC + FBA unsellable</div></div>
     <div class="kpi co"><div class="kpi-lbl">Low Stock SKUs</div><div class="kpi-val" id="k4">—</div><div class="kpi-sub">Total sellable &lt; 50</div></div>
     <div class="kpi cr"><div class="kpi-lbl">Flagged SKUs</div><div class="kpi-val" id="k5">—</div><div class="kpi-sub">Rows with any issue</div></div>
@@ -253,11 +297,12 @@ td:last-child{border-right:none;}
   <div class="charts-row">
     <div class="chart-card">
       <div class="chart-hd">
-        <div class="chart-title">Sellable Stock — FC vs FBA (Top 15)</div>
+        <div class="chart-title">Sellable Stock — FC vs FBA vs Transit (Top 15)</div>
         <div class="bar-legend">
           <div class="bl-item"><div class="bl-dot" style="background:#6366f1"></div>FC Sellable</div>
           <div class="bl-item"><div class="bl-dot" style="background:#38bdf8"></div>FBA Available</div>
           <div class="bl-item"><div class="bl-dot" style="background:#f472b6"></div>Inbound</div>
+          <div class="bl-item"><div class="bl-dot" style="background:#fbbf24"></div>Processing</div>
         </div>
       </div>
       <div class="bar-wrap"><canvas id="cbar"></canvas></div>
@@ -313,6 +358,7 @@ td:last-child{border-right:none;}
         <button class="chip" id="chls" onclick="toggleChip('ls')">↓ Low Stock</button>
         <button class="chip" id="chhu" onclick="toggleChip('hu')">↑ High Unsellable</button>
         <button class="chip" id="chfo" onclick="toggleChip('fo')">◈ FC Only</button>
+        <button class="chip" id="chtr" onclick="toggleChip('tr')">⟳ In Transit</button>
       </div>
       <button class="btn-dl" onclick="downloadExcel()" title="Download currently visible rows as Excel">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -337,7 +383,9 @@ td:last-child{border-right:none;}
             <th class="nc compact" onclick="sortBy('fba_available')"><div class="thi">FBA Avail<span class="sarr" data-col="fba_available">↕</span></div></th>
             <th class="nc compact" onclick="sortBy('fba_unsellable')"><div class="thi">FBA Unsell<span class="sarr" data-col="fba_unsellable">↕</span></div></th>
             <th class="nc compact" onclick="sortBy('inbound')"><div class="thi">Inbound<span class="sarr" data-col="inbound">↕</span></div></th>
-            <th class="nc compact" onclick="sortBy('total')"><div class="thi">Total<span class="sarr" data-col="total">↕</span></div></th>
+            <th class="nc compact" onclick="sortBy('processing')"><div class="thi">Processing<span class="sarr" data-col="processing">↕</span></div></th>
+            <th class="nc compact" onclick="sortBy('total')"><div class="thi">Sellable<span class="sarr" data-col="total">↕</span></div></th>
+            <th class="nc compact" onclick="sortBy('grand_total')"><div class="thi">Grand Tot<span class="sarr" data-col="grand_total">↕</span></div></th>
             <th class="nc" onclick="sortBy('unit_cost')"><div class="thi">Unit Cost<span class="sarr" data-col="unit_cost">↕</span></div></th>
             <th class="nc" onclick="sortBy('total_cost')"><div class="thi">Total Cost<span class="sarr" data-col="total_cost">↕</span></div></th>
             <th onclick="sortBy('issue_count')"><div class="thi">Status<span class="sarr" data-col="issue_count">↕</span></div></th>
@@ -363,7 +411,7 @@ const SHEET_URL="https://docs.google.com/spreadsheets/d/1jZv_Qqeg2RWXssYroxyS3_f
 const SH_SELL="Sellable_Inventory", SH_UN="Unsellable", SH_FBA="FBA_Inventory", SH_RPT="FBAInvReport";
 
 // ══════════════════════════════════════════
-// ASIN BLOCKLIST — these ASINs are excluded from the dashboard entirely
+// ASIN BLOCKLIST
 // ══════════════════════════════════════════
 const ASIN_BLOCKLIST = new Set([
   "B0CN1153M4","B0F5Q4RV2R","B0BRXX6HMR","B0BYZVNPL4","B0C9CVWLL3",
@@ -391,192 +439,159 @@ const ASIN_BLOCKLIST = new Set([
 // COST MAP (₹ per unit, keyed by ASIN)
 // ══════════════════════════════════════════
 const COST_MAP = {
-  "B0FSSL1Q2X": 4864.07,
-  "B0BPHT9WY9": 2828.0,
-  "B0DQGQY98X": 941.8,
-  "B0FZSJRV5F": 1825.35,
-  "B0GSZRF4M5": 1227.75,
-  "B0CQM5THV3": 1059.47,
-  "B0F8QKDJN3": 1477.0,
-  "B0GPCQ9KLN": 3830.83,
-  "B0DKXD4N4R": 4529.89,
-  "B0DGF32QRT": 1018.37,
-  "B0F5Q4RV2R": 1339.0,
-  "B0FGCT1MWB": 1410.78,
-  "B0CJVGCB4K": 3333.34,
-  "B0D39NNN57": 1350.3,
-  "B0CR75SMCQ": 593.04,
-  "B0CN1153M4": 1224.55,
-  "B0CRB2KDC6": 1413.08,
-  "B0CBXG8CLB": 1815.27,
-  "B0CZ99K438": 1943.19,
-  "B0CBC9G7W2": 795.13,
-  "B0BFFW365Y": 2837.0,
-  "B0DDL3TR1L": 924.47,
-  "B0DRL8ZDWX": 2942.4,
-  "B0CPDPTHVN": 1126.75,
-  "B0CXN44J7J": 1033.54,
-  "B0C8JRN652": 2927.79,
-  "B0FHQSL9DH": 3740.06,
-  "B0DPCRLRNJ": 1347.23,
-  "B0D4F7Y3NZ": 1854.0,
-  "B0D9LS2P2F": 856.1,
-  "B0CLYLNCZD": 3556.78,
-  "B0GDKY6QHN": 1354.03,
-  "B0DW8DX2M9": 2734.98,
-  "B0FZSCW83R": 1082.64,
-  "B0DBCW1PS4": 2233.25,
-  "B0G1YY4MJK": 861.26,
-  "B0FKZPDH66": 3252.79,
-  "B0DL5PXZ65": 3190.43,
-  "B0FLV3V1W4": 987.39,
-  "B0DPJ8BWCG": 1344.0,
-  "B0C72FSCFM": 757.24,
-  "B0DXKWKBWQ": 122.0,
-  "B0DW8PCP6D": 158.94,
-  "B0CHFQPZMK": 217.0,
-  "B0D1P7SC46": 1138.23,
-  "B0FL2VFCT9": 122.0,
-  "B0DXC17SSS": 122.0,
-  "B0DTNVQ34H": 92.83,
-  "B0D9T8R3W8": 132.64,
-  "B0D4F12NJT": 1.0
+  "B0FSSL1Q2X": 4864.07,"B0BPHT9WY9": 2828.0,"B0DQGQY98X": 941.8,
+  "B0FZSJRV5F": 1825.35,"B0GSZRF4M5": 1227.75,"B0CQM5THV3": 1059.47,
+  "B0F8QKDJN3": 1477.0,"B0GPCQ9KLN": 3830.83,"B0DKXD4N4R": 4529.89,
+  "B0DGF32QRT": 1018.37,"B0F5Q4RV2R": 1339.0,"B0FGCT1MWB": 1410.78,
+  "B0CJVGCB4K": 3333.34,"B0D39NNN57": 1350.3,"B0CR75SMCQ": 593.04,
+  "B0CN1153M4": 1224.55,"B0CRB2KDC6": 1413.08,"B0CBXG8CLB": 1815.27,
+  "B0CZ99K438": 1943.19,"B0CBC9G7W2": 795.13,"B0BFFW365Y": 2837.0,
+  "B0DDL3TR1L": 924.47,"B0DRL8ZDWX": 2942.4,"B0CPDPTHVN": 1126.75,
+  "B0CXN44J7J": 1033.54,"B0C8JRN652": 2927.79,"B0FHQSL9DH": 3740.06,
+  "B0DPCRLRNJ": 1347.23,"B0D4F7Y3NZ": 1854.0,"B0D9LS2P2F": 856.1,
+  "B0CLYLNCZD": 3556.78,"B0GDKY6QHN": 1354.03,"B0DW8DX2M9": 2734.98,
+  "B0FZSCW83R": 1082.64,"B0DBCW1PS4": 2233.25,"B0G1YY4MJK": 861.26,
+  "B0FKZPDH66": 3252.79,"B0DL5PXZ65": 3190.43,"B0FLV3V1W4": 987.39,
+  "B0DPJ8BWCG": 1344.0,"B0C72FSCFM": 757.24,"B0DXKWKBWQ": 122.0,
+  "B0DW8PCP6D": 158.94,"B0CHFQPZMK": 217.0,"B0D1P7SC46": 1138.23,
+  "B0FL2VFCT9": 122.0,"B0DXC17SSS": 122.0,"B0DTNVQ34H": 92.83,
+  "B0D9T8R3W8": 132.64,"B0D4F12NJT": 1.0
 };
 
 // ══════════════════════════════════════════
-// SKU MATCH MAP  (seller SKU names, keyed by ASIN)
+// SKU MAP
 // ══════════════════════════════════════════
 const SKU_MAP = {
-  "B0GPCQ9KLN": { "sellerSku": "Logic View Monitor HLT550", "finalName": "HLT550 Video Monitor" },
-  "B0F5Q4RV2R": { "sellerSku": "Helett 2D Barcode Scanner Fba", "finalName": "Helett 2D Barcode Scanner Fba" },
-  "B0C8JRN652": { "sellerSku": "UY16 UHF Wireless mic", "finalName": "Uy 16 wireless mic" },
-  "B0CN1153M4": { "sellerSku": "Helett HT35 Dual UHF Mic", "finalName": "Helett HT35 Dual UHF Mic" },
-  "B0BRXX6HMR": { "sellerSku": "Wifi Dongle FBA", "finalName": "Wifi Dongle FBA" },
-  "B0G1YY4MJK": { "sellerSku": "Helett travel-Fi 4G", "finalName": "Helett travelfi 4g Hotspot" },
-  "B0BYZVNPL4": { "sellerSku": "UNIY UY 35 Mini led Projector", "finalName": "UNIY UY 35 Mini led Projector" },
-  "B0C9CVWLL3": { "sellerSku": "Uniy S11 FBA", "finalName": "Uniy S11 FBA" },
-  "B0FLK7RSCV": { "sellerSku": "Helett HLT550 Portable Monitor", "finalName": "Helett HLT550 Portable Monitor" },
-  "B0DL5PXZ65": { "sellerSku": "Helett H55C Thermal Label Printer", "finalName": "H30c pro old (HE480)" },
-  "B0FZSJRV5F": { "sellerSku": "Helett H65C Label Printer", "finalName": "H65C Mini Printer (New Blue)" },
-  "B0D4F7Y3NZ": { "sellerSku": "Helett H29 Wireless Drama Mic", "finalName": "Helett H29 Wireless Drama Mic" },
-  "B0DKXD4N4R": { "sellerSku": "Helett A4L Pro Thermal Printer", "finalName": "Helett A4L Pro Thermal Printer" },
-  "B0CN11FZW5": { "sellerSku": "T10 Projector FBA", "finalName": "T10 Projector FBA" },
-  "B0888WZ411": { "sellerSku": "Helett TV", "finalName": "Helett TV" },
-  "B0C8TW9ZR6": { "sellerSku": "I5-Z3IP-OQGJ", "finalName": "I5-Z3IP-OQGJ" },
-  "B0CL4GVKSN": { "sellerSku": "UNIY T10 Mini Projector", "finalName": "UNIY T10 Mini Projector" },
-  "B0BFRS5BLT": { "sellerSku": "UY8401 Smart Digital Door Lock FBA", "finalName": "UY8401 Smart Digital Door Lock FBA" },
-  "B0CB1DDNV7": { "sellerSku": "UY20 Streaming mic", "finalName": "UY20 Streaming mic" },
-  "B0CJVGCB4K": { "sellerSku": "H30c printer (White)", "finalName": "H30c printer (New)" },
-  "B0CRB2KDC6": { "sellerSku": "HT320 Digital Door MFN", "finalName": "HT320 Smart lock" },
-  "B01G46PYPO": { "sellerSku": "UC46 New Projector 12", "finalName": "UC46 New Projector 12" },
-  "B0BZ8HF4WL": { "sellerSku": "UNIY UY410 Barcode Scanner", "finalName": "UNIY UY410 Barcode Scanner" },
-  "B07TW7QMBN": { "sellerSku": "YUNTAB 3G Tablet", "finalName": "YUNTAB 3G Tablet" },
-  "B07TD94GPJ": { "sellerSku": "Proscan PLT8990-K", "finalName": "Proscan PLT8990-K" },
-  "B0BFFW365Y": { "sellerSku": "UNIY UY610 Smart Door Lock FBA", "finalName": "UNIY UY610 Smart Door Lock FBA" },
-  "B0BPHT9WY9": { "sellerSku": "UY40 Projector FBA", "finalName": "UY40 Projector FBA" },
-  "B0CLYLNCZD": { "sellerSku": "810 App Door Lock FBA", "finalName": "810 App Door Lock FBA" },
-  "B0CFHRLWM2": { "sellerSku": "helett HT 75W car power inverter", "finalName": "helett HT 75W car power inverter" },
-  "B0B5VQYGW6": { "sellerSku": "UNIY Smart Life Security Camera", "finalName": "UNIY Smart Life Security Camera" },
-  "B0CQ24C7DX": { "sellerSku": "V0-FM48-RT2B", "finalName": "V0-FM48-RT2B" },
-  "B0DGF32QRT": { "sellerSku": "Helett AC1200 Dual Band Wifi Router", "finalName": "AC1200 Wifi Router" },
-  "B0DD7LH58C": { "sellerSku": "Helett JH1200", "finalName": "Helett JH1200" },
-  "B0FZL52KY4": { "sellerSku": "Helett infiStick Tv Stick", "finalName": "Helett infiStick Tv Stick" },
-  "B0CQTJH6WX": { "sellerSku": "Car-Jumper-Black", "finalName": "Car-Jumper-Black" },
-  "B0D39NNN57": { "sellerSku": "Helett HT15 wired desktop scanner", "finalName": "Helett HT15 wired desktop scanner" },
-  "B0D4F12NJT": { "sellerSku": "Uniy U01 Rfid Card", "finalName": "Uniy U01 Rfid Card" },
-  "B0CD7YNMRM": { "sellerSku": "XP-H1UH-2R9U", "finalName": "XP-H1UH-2R9U" },
-  "B07QLRJGDJ": { "sellerSku": "4 UC46 Projector", "finalName": "4 UC46 Projector" },
-  "B0DXKWKBWQ": { "sellerSku": "Helett 2x1.5 Thermal Label", "finalName": "65C Label Roll" },
-  "B0CHFQPZMK": { "sellerSku": "helett HT200 Soundbar", "finalName": "helett HT200 Soundbar" },
-  "B0CB8YRRZ4": { "sellerSku": "helett HU1 kids GPS Tracking watch", "finalName": "helett HU1 kids GPS Tracking watch" },
-  "B0CBC9G7W2": { "sellerSku": "HT410 wired Barcode scanner FBA", "finalName": "HT410 barcode (BLUE)" },
-  "B0DLKM4N5G": { "sellerSku": "Helett Z567 Tyre Inflator", "finalName": "Helett Z567 Tyre Inflator" },
-  "B0DGGPBX97": { "sellerSku": "Helett travel-Fi 4g Hotspot", "finalName": "Helett travel-Fi 4g Hotspot" },
-  "B0DPCRLRNJ": { "sellerSku": "HT20pro Wirelss Barcode Scanner", "finalName": "HT20 Pro barcode" },
-  "B0CQNM753Q": { "sellerSku": "Helett H92i Android Tv Stick", "finalName": "Helett H92i Android Tv Stick" },
-  "B0C72FSCFM": { "sellerSku": "U19 wireless Training Mic", "finalName": "U19 wireless Training Mic" },
-  "B0F1KF6P4J": { "sellerSku": "Helett HT-M318 Desktop Barcode Scanner", "finalName": "Helett HT-M318 Desktop Barcode Scanner" },
-  "B07XP99KF8": { "sellerSku": "UC46 0 Projector", "finalName": "UC46 0 Projector" },
-  "B0CXPX968F": { "sellerSku": "H89i", "finalName": "H89i" },
-  "B0C999P5KB": { "sellerSku": "HT210 galaxy projector kid", "finalName": "HT210 galaxy projector kid" },
-  "B09FGVPBHK": { "sellerSku": "Led Projector", "finalName": "Led Projector" },
-  "B0BPPNNVT5": { "sellerSku": "UNIY UY (310) 4G Wi-Fi  Hotspot Dongle", "finalName": "UNIY UY (310) 4G Wi-Fi  Hotspot Dongle" },
-  "B0DXC17SSS": { "sellerSku": "HE24 Thermal Label 15x30", "finalName": "HE24 Thermal Label 15x30" },
-  "B0BDFLDDKR": { "sellerSku": "UNIY UY8300 FBA", "finalName": "UNIY UY8300 FBA" },
-  "B0BJC4WGDK": { "sellerSku": "UY 12 UHF Dual wireless MIC", "finalName": "UY 12 UHF Dual wireless MIC" },
-  "B0CBXG8CLB": { "sellerSku": "HT210 Door lock", "finalName": "HT210 Door lock" },
-  "B084TQMCLN": { "sellerSku": "UC 200 Projector", "finalName": "UC 200 Projector" },
-  "B016DGF0ZY": { "sellerSku": "UNIC UC40 Projector 1080p", "finalName": "UNIC UC40 Projector 1080p" },
-  "B0BLNLYVFQ": { "sellerSku": "G5-MA5V-WDTH", "finalName": "G5-MA5V-WDTH" },
-  "B0DD6WNP26": { "sellerSku": "Helett HW10 wifi extender", "finalName": "Helett HW10 wifi extender" },
-  "B08LQ1G624": { "sellerSku": "UC46 projector", "finalName": "UC46 projector" },
-  "B0DPJ8BWCG": { "sellerSku": "Helett H92 TV Stick", "finalName": "Helett H92 TV Stick" },
-  "B0CXN44J7J": { "sellerSku": "helett H58i Bluetooth Printer FBA", "finalName": "H58i mini printer" },
-  "B0CNLW386T": { "sellerSku": "Helett HT15 wired Barcode Scanner FBA", "finalName": "Helett HT15 wired Barcode Scanner FBA" },
-  "B0D9LS2P2F": { "sellerSku": "Helett HL96 Hair Dryer FBA", "finalName": "Helett HL96 Hair Dryer" },
-  "B0DW8DX2M9": { "sellerSku": "Helett H30CLite Printer", "finalName": "H30c lite printer" },
-  "B013JYPTA4": { "sellerSku": "UC 40+ Projector 1325", "finalName": "UC 40+ Projector 1325" },
-  "B0BRKVYG8X": { "sellerSku": "2D-B2X1-4D6F", "finalName": "2D-B2X1-4D6F" },
-  "B07TB4DZTK": { "sellerSku": "RD-801 Projector", "finalName": "RD-801 Projector" },
-  "B0FSSL1Q2X": { "sellerSku": "Helett H30C Printer New FBA", "finalName": "H30c printer(Old)" },
-  "B0F8QKDJN3": { "sellerSku": "Helett Ht15e Desktop Barcode Scanner FBA", "finalName": "HT15E" },
-  "B0DJK3GNCY": { "sellerSku": "helett WS5", "finalName": "helett WS5" },
-  "B01DYJ8R4O": { "sellerSku": "UNIC UC30 PROJECTOR", "finalName": "UNIC UC30 PROJECTOR" },
-  "B0DW8PCP6D": { "sellerSku": "Helett 4x6 Thermal Label", "finalName": "Helett 4x6 Thermal Label" },
-  "B0D9KKFVT6": { "sellerSku": "UNIY UY720 Smart Door Lock FBA", "finalName": "UNIY UY720 Smart Door Lock FBA" },
-  "B0BL3LJHRB": { "sellerSku": "UY46 old", "finalName": "UY46 old" },
-  "B08FC23JD7": { "sellerSku": "UC20 projector", "finalName": "UC20 projector" },
-  "B0CZ99K438": { "sellerSku": "H80i Autocut Thermal Printer", "finalName": "H80i Autocut Thermal Printer" },
-  "B07T2VZMSG": { "sellerSku": "HTPHT580BLACK", "finalName": "HTPHT580BLACK" },
-  "B0DDL3TR1L": { "sellerSku": "helett HE24 Label Printer", "finalName": "HE24 mini printer" },
-  "B0CPDPTHVN": { "sellerSku": "Helett Ht20 Barcode Scanner", "finalName": "HT20 barcode" },
-  "B0D9KJJ7WF": { "sellerSku": "D8-ZNA6-NT4M", "finalName": "D8-ZNA6-NT4M" },
-  "B07FDG8GQT": { "sellerSku": "1UC46Projector", "finalName": "1UC46Projector" },
-  "B01H35Y352": { "sellerSku": "UC 30 Project 3", "finalName": "UC 30 Project 3" },
-  "B07MK547MK": { "sellerSku": "UC46 90", "finalName": "UC46 90" },
-  "B0GSZRF4M5": { "sellerSku": "Helett Z567 Tyre Inflator NEW", "finalName": "Helett Z567 Tyre Inflator NEW" },
-  "B0C3HZDJ5C": { "sellerSku": "ZT-NKSW-TLDE", "finalName": "ZT-NKSW-TLDE" },
-  "B0FL2VFCT9": { "sellerSku": "HE24 Thermal Label 12x50", "finalName": "HE24 Labell Roll (12x50)" },
-  "B0C96F68YL": { "sellerSku": "helett HT8400 car power inverter", "finalName": "helett HT8400 car power inverter" },
-  "B0D1P7SC46": { "sellerSku": "Helett H65C 2in1 Thermal Printer", "finalName": "Helett H65C 2in1 Thermal Printer" },
-  "B0BRXVQ85M": { "sellerSku": "UNIY UY20+ Mini Led projector", "finalName": "UNIY UY20+ Mini Led projector" },
-  "B0DTNVQ34H": { "sellerSku": "HE24 Label Tape", "finalName": "12x30 HE24 labels" },
-  "B0FLV3V1W4": { "sellerSku": "Helett H65Clite Printer", "finalName": "H65C Lite" },
-  "B0FZSCW83R": { "sellerSku": "Helett H75C Printer", "finalName": "H65C Mini Printer (New)" },
-  "B0BD9191XX": { "sellerSku": "UY400 mini Led Projector", "finalName": "UY400 mini Led Projector" },
-  "B0FGCT1MWB": { "sellerSku": "Helett Ht15 Desktop Barcode Scanner", "finalName": "HT15 wired desktop scanner" },
-  "B0DQGSMG4N": { "sellerSku": "Helett Label Paper 4x6", "finalName": "Helett Label Paper 4x6" },
-  "B091TCSG4D": { "sellerSku": "UNIY UY200", "finalName": "UNIY UY200" },
-  "B0CR75SMCQ": { "sellerSku": "H41", "finalName": "H41" },
-  "B07T85LWH7": { "sellerSku": "Yuntab 7 inch 3G Unlocked", "finalName": "Yuntab 7 inch 3G Unlocked" },
-  "B09TY1SZP6": { "sellerSku": "New UY46 FBA", "finalName": "New UY46 FBA" },
-  "B0DTQ3ZCBH": { "sellerSku": "HE24 Thermal Label Tape", "finalName": "15X50 HE24 labels" },
-  "B0DRL8ZDWX": { "sellerSku": "Helett H30C Lite Printer", "finalName": "Helett H30C Lite Printer" },
-  "B086ZFW6HD": { "sellerSku": "FILPO Soap Dispenser", "finalName": "FILPO Soap Dispenser" },
-  "B0BJMLX4RR": { "sellerSku": "UY10 Wired Mic", "finalName": "UY10 Wired Mic" },
-  "B0CQTK12SW": { "sellerSku": "Rice-Cooker-Black", "finalName": "Rice-Cooker-Black" },
-  "B0DQGQY98X": { "sellerSku": "Helett HE760 Mobile Printer", "finalName": "Helett HE760 Mobile Printer" },
-  "B09K4M1JSN": { "sellerSku": "UNIY UY 46 Projector", "finalName": "UNIY UY 46 Projector" },
-  "B0D9T8R3W8": { "sellerSku": "Helett H01 Label Holder FBA", "finalName": "H01 Label Holder" },
-  "B09TWLRXZ3": { "sellerSku": "UNIY A1 128 GB SdCard", "finalName": "UNIY A1 128 GB SdCard" },
-  "B0FKZPDH66": { "sellerSku": "Helett H30C Pro Printer", "finalName": "H30C pro Aiyin" },
-  "B07Q5PC3SV": { "sellerSku": "UC 40+ Projector", "finalName": "UC 40+ Projector" },
-  "B0F6MXY655": { "sellerSku": "HT20proL Wirelss Barcode Scanner MFN", "finalName": "HT20proL Wirelss Barcode Scanner MFN" },
-  "B0BRN9ZGL1": { "sellerSku": "UY-TTH9-BCAS", "finalName": "UY-TTH9-BCAS" },
-  "B0BLV54ZQK": { "sellerSku": "UY 14 UHF Wireless MIC", "finalName": "UY 14 wireless mic" },
-  "B0CC8ZFPRX": { "sellerSku": "HT510 Barcode Scanner", "finalName": "HT510 Barcode Scanner" },
-  "B0DD7RS56N": { "sellerSku": "Helett Z567 Tyre Inflator FBA", "finalName": "Helett Z567 Tyre Inflator FBA" },
-  "B0CB8X5RCN": { "sellerSku": "UNIY UY85 kids smart watch", "finalName": "UNIY UY85 kids smart watch" },
-  "B0C8NNB48Z": { "sellerSku": "UY510 Barcode Scanner", "finalName": "UY510 Barcode Scanner" },
-  "B08PSLZYZV": { "sellerSku": "UC20 mini projector", "finalName": "UC20 mini projector" },
-  "B0DBCW1PS4": { "sellerSku": "UNIY UY720 Smartdoor Lock FBA", "finalName": "UY720 door lock" },
-  "B0CQM5THV3": { "sellerSku": "ECO- D3-BT", "finalName": "BT Sound bar" },
-  "B0GDKY6QHN": { "sellerSku": "Helett infiStick android stick", "finalName": "Helett infiStick Tv Stick" },
-  "B0FGTMFZFM": { "sellerSku": "MO-DT5V-SO2M", "finalName": "MO-DT5V-SO2M" },
-  "B0DGCG6MN4": { "sellerSku": "Helett HE760 Receipt Printer FBA", "finalName": "Helett HE760 Receipt Printer FBA" },
-  "B0CR7JGRYJ": { "sellerSku": "SKU: OFFICE_LOCK_BLACK_30-100", "finalName": "SKU: OFFICE_LOCK_BLACK_30-100" },
-  "B0FHQSL9DH": { "sellerSku": "Helett H30CPro Printer", "finalName": "Helett H30CPro Printer" },
-  "B0CMMMJ5WY": { "sellerSku": "Helett HT35 Dual microphone", "finalName": "Helett HT35 Dual microphone" }
+  "B0GPCQ9KLN":{"sellerSku":"Logic View Monitor HLT550","finalName":"HLT550 Video Monitor"},
+  "B0F5Q4RV2R":{"sellerSku":"Helett 2D Barcode Scanner Fba","finalName":"Helett 2D Barcode Scanner Fba"},
+  "B0C8JRN652":{"sellerSku":"UY16 UHF Wireless mic","finalName":"Uy 16 wireless mic"},
+  "B0CN1153M4":{"sellerSku":"Helett HT35 Dual UHF Mic","finalName":"Helett HT35 Dual UHF Mic"},
+  "B0BRXX6HMR":{"sellerSku":"Wifi Dongle FBA","finalName":"Wifi Dongle FBA"},
+  "B0G1YY4MJK":{"sellerSku":"Helett travel-Fi 4G","finalName":"Helett travelfi 4g Hotspot"},
+  "B0BYZVNPL4":{"sellerSku":"UNIY UY 35 Mini led Projector","finalName":"UNIY UY 35 Mini led Projector"},
+  "B0C9CVWLL3":{"sellerSku":"Uniy S11 FBA","finalName":"Uniy S11 FBA"},
+  "B0FLK7RSCV":{"sellerSku":"Helett HLT550 Portable Monitor","finalName":"Helett HLT550 Portable Monitor"},
+  "B0DL5PXZ65":{"sellerSku":"Helett H55C Thermal Label Printer","finalName":"H30c pro old (HE480)"},
+  "B0FZSJRV5F":{"sellerSku":"Helett H65C Label Printer","finalName":"H65C Mini Printer (New Blue)"},
+  "B0D4F7Y3NZ":{"sellerSku":"Helett H29 Wireless Drama Mic","finalName":"Helett H29 Wireless Drama Mic"},
+  "B0DKXD4N4R":{"sellerSku":"Helett A4L Pro Thermal Printer","finalName":"Helett A4L Pro Thermal Printer"},
+  "B0CN11FZW5":{"sellerSku":"T10 Projector FBA","finalName":"T10 Projector FBA"},
+  "B0888WZ411":{"sellerSku":"Helett TV","finalName":"Helett TV"},
+  "B0C8TW9ZR6":{"sellerSku":"I5-Z3IP-OQGJ","finalName":"I5-Z3IP-OQGJ"},
+  "B0CL4GVKSN":{"sellerSku":"UNIY T10 Mini Projector","finalName":"UNIY T10 Mini Projector"},
+  "B0BFRS5BLT":{"sellerSku":"UY8401 Smart Digital Door Lock FBA","finalName":"UY8401 Smart Digital Door Lock FBA"},
+  "B0CB1DDNV7":{"sellerSku":"UY20 Streaming mic","finalName":"UY20 Streaming mic"},
+  "B0CJVGCB4K":{"sellerSku":"H30c printer (White)","finalName":"H30c printer (New)"},
+  "B0CRB2KDC6":{"sellerSku":"HT320 Digital Door MFN","finalName":"HT320 Smart lock"},
+  "B01G46PYPO":{"sellerSku":"UC46 New Projector 12","finalName":"UC46 New Projector 12"},
+  "B0BZ8HF4WL":{"sellerSku":"UNIY UY410 Barcode Scanner","finalName":"UNIY UY410 Barcode Scanner"},
+  "B07TW7QMBN":{"sellerSku":"YUNTAB 3G Tablet","finalName":"YUNTAB 3G Tablet"},
+  "B07TD94GPJ":{"sellerSku":"Proscan PLT8990-K","finalName":"Proscan PLT8990-K"},
+  "B0BFFW365Y":{"sellerSku":"UNIY UY610 Smart Door Lock FBA","finalName":"UNIY UY610 Smart Door Lock FBA"},
+  "B0BPHT9WY9":{"sellerSku":"UY40 Projector FBA","finalName":"UY40 Projector FBA"},
+  "B0CLYLNCZD":{"sellerSku":"810 App Door Lock FBA","finalName":"810 App Door Lock FBA"},
+  "B0CFHRLWM2":{"sellerSku":"helett HT 75W car power inverter","finalName":"helett HT 75W car power inverter"},
+  "B0B5VQYGW6":{"sellerSku":"UNIY Smart Life Security Camera","finalName":"UNIY Smart Life Security Camera"},
+  "B0CQ24C7DX":{"sellerSku":"V0-FM48-RT2B","finalName":"V0-FM48-RT2B"},
+  "B0DGF32QRT":{"sellerSku":"Helett AC1200 Dual Band Wifi Router","finalName":"AC1200 Wifi Router"},
+  "B0DD7LH58C":{"sellerSku":"Helett JH1200","finalName":"Helett JH1200"},
+  "B0FZL52KY4":{"sellerSku":"Helett infiStick Tv Stick","finalName":"Helett infiStick Tv Stick"},
+  "B0CQTJH6WX":{"sellerSku":"Car-Jumper-Black","finalName":"Car-Jumper-Black"},
+  "B0D39NNN57":{"sellerSku":"Helett HT15 wired desktop scanner","finalName":"Helett HT15 wired desktop scanner"},
+  "B0D4F12NJT":{"sellerSku":"Uniy U01 Rfid Card","finalName":"Uniy U01 Rfid Card"},
+  "B0CD7YNMRM":{"sellerSku":"XP-H1UH-2R9U","finalName":"XP-H1UH-2R9U"},
+  "B07QLRJGDJ":{"sellerSku":"4 UC46 Projector","finalName":"4 UC46 Projector"},
+  "B0DXKWKBWQ":{"sellerSku":"Helett 2x1.5 Thermal Label","finalName":"65C Label Roll"},
+  "B0CHFQPZMK":{"sellerSku":"helett HT200 Soundbar","finalName":"helett HT200 Soundbar"},
+  "B0CB8YRRZ4":{"sellerSku":"helett HU1 kids GPS Tracking watch","finalName":"helett HU1 kids GPS Tracking watch"},
+  "B0CBC9G7W2":{"sellerSku":"HT410 wired Barcode scanner FBA","finalName":"HT410 barcode (BLUE)"},
+  "B0DLKM4N5G":{"sellerSku":"Helett Z567 Tyre Inflator","finalName":"Helett Z567 Tyre Inflator"},
+  "B0DGGPBX97":{"sellerSku":"Helett travel-Fi 4g Hotspot","finalName":"Helett travel-Fi 4g Hotspot"},
+  "B0DPCRLRNJ":{"sellerSku":"HT20pro Wirelss Barcode Scanner","finalName":"HT20 Pro barcode"},
+  "B0CQNM753Q":{"sellerSku":"Helett H92i Android Tv Stick","finalName":"Helett H92i Android Tv Stick"},
+  "B0C72FSCFM":{"sellerSku":"U19 wireless Training Mic","finalName":"U19 wireless Training Mic"},
+  "B0F1KF6P4J":{"sellerSku":"Helett HT-M318 Desktop Barcode Scanner","finalName":"Helett HT-M318 Desktop Barcode Scanner"},
+  "B07XP99KF8":{"sellerSku":"UC46 0 Projector","finalName":"UC46 0 Projector"},
+  "B0CXPX968F":{"sellerSku":"H89i","finalName":"H89i"},
+  "B0C999P5KB":{"sellerSku":"HT210 galaxy projector kid","finalName":"HT210 galaxy projector kid"},
+  "B09FGVPBHK":{"sellerSku":"Led Projector","finalName":"Led Projector"},
+  "B0BPPNNVT5":{"sellerSku":"UNIY UY (310) 4G Wi-Fi  Hotspot Dongle","finalName":"UNIY UY (310) 4G Wi-Fi  Hotspot Dongle"},
+  "B0DXC17SSS":{"sellerSku":"HE24 Thermal Label 15x30","finalName":"HE24 Thermal Label 15x30"},
+  "B0BDFLDDKR":{"sellerSku":"UNIY UY8300 FBA","finalName":"UNIY UY8300 FBA"},
+  "B0BJC4WGDK":{"sellerSku":"UY 12 UHF Dual wireless MIC","finalName":"UY 12 UHF Dual wireless MIC"},
+  "B0CBXG8CLB":{"sellerSku":"HT210 Door lock","finalName":"HT210 Door lock"},
+  "B084TQMCLN":{"sellerSku":"UC 200 Projector","finalName":"UC 200 Projector"},
+  "B016DGF0ZY":{"sellerSku":"UNIC UC40 Projector 1080p","finalName":"UNIC UC40 Projector 1080p"},
+  "B0BLNLYVFQ":{"sellerSku":"G5-MA5V-WDTH","finalName":"G5-MA5V-WDTH"},
+  "B0DD6WNP26":{"sellerSku":"Helett HW10 wifi extender","finalName":"Helett HW10 wifi extender"},
+  "B08LQ1G624":{"sellerSku":"UC46 projector","finalName":"UC46 projector"},
+  "B0DPJ8BWCG":{"sellerSku":"Helett H92 TV Stick","finalName":"Helett H92 TV Stick"},
+  "B0CXN44J7J":{"sellerSku":"helett H58i Bluetooth Printer FBA","finalName":"H58i mini printer"},
+  "B0CNLW386T":{"sellerSku":"Helett HT15 wired Barcode Scanner FBA","finalName":"Helett HT15 wired Barcode Scanner FBA"},
+  "B0D9LS2P2F":{"sellerSku":"Helett HL96 Hair Dryer FBA","finalName":"Helett HL96 Hair Dryer"},
+  "B0DW8DX2M9":{"sellerSku":"Helett H30CLite Printer","finalName":"H30c lite printer"},
+  "B013JYPTA4":{"sellerSku":"UC 40+ Projector 1325","finalName":"UC 40+ Projector 1325"},
+  "B0BRKVYG8X":{"sellerSku":"2D-B2X1-4D6F","finalName":"2D-B2X1-4D6F"},
+  "B07TB4DZTK":{"sellerSku":"RD-801 Projector","finalName":"RD-801 Projector"},
+  "B0FSSL1Q2X":{"sellerSku":"Helett H30C Printer New FBA","finalName":"H30c printer(Old)"},
+  "B0F8QKDJN3":{"sellerSku":"Helett Ht15e Desktop Barcode Scanner FBA","finalName":"HT15E"},
+  "B0DJK3GNCY":{"sellerSku":"helett WS5","finalName":"helett WS5"},
+  "B01DYJ8R4O":{"sellerSku":"UNIC UC30 PROJECTOR","finalName":"UNIC UC30 PROJECTOR"},
+  "B0DW8PCP6D":{"sellerSku":"Helett 4x6 Thermal Label","finalName":"Helett 4x6 Thermal Label"},
+  "B0D9KKFVT6":{"sellerSku":"UNIY UY720 Smart Door Lock FBA","finalName":"UNIY UY720 Smart Door Lock FBA"},
+  "B0BL3LJHRB":{"sellerSku":"UY46 old","finalName":"UY46 old"},
+  "B08FC23JD7":{"sellerSku":"UC20 projector","finalName":"UC20 projector"},
+  "B0CZ99K438":{"sellerSku":"helett H80i Autocut Thermal Printer","finalName":"H80i Autocut Thermal Printer"},
+  "B07T2VZMSG":{"sellerSku":"HTPHT580BLACK","finalName":"HTPHT580BLACK"},
+  "B0DDL3TR1L":{"sellerSku":"helett HE24 Label Printer","finalName":"HE24 mini printer"},
+  "B0CPDPTHVN":{"sellerSku":"Helett Ht20 Barcode Scanner","finalName":"HT20 barcode"},
+  "B0D9KJJ7WF":{"sellerSku":"D8-ZNA6-NT4M","finalName":"D8-ZNA6-NT4M"},
+  "B07FDG8GQT":{"sellerSku":"1UC46Projector","finalName":"1UC46Projector"},
+  "B01H35Y352":{"sellerSku":"UC 30 Project 3","finalName":"UC 30 Project 3"},
+  "B07MK547MK":{"sellerSku":"UC46 90","finalName":"UC46 90"},
+  "B0GSZRF4M5":{"sellerSku":"Helett Z567 Tyre Inflator NEW","finalName":"Helett Z567 Tyre Inflator NEW"},
+  "B0C3HZDJ5C":{"sellerSku":"ZT-NKSW-TLDE","finalName":"ZT-NKSW-TLDE"},
+  "B0FL2VFCT9":{"sellerSku":"HE24 Thermal Label 12x50","finalName":"HE24 Labell Roll (12x50)"},
+  "B0C96F68YL":{"sellerSku":"helett HT8400 car power inverter","finalName":"helett HT8400 car power inverter"},
+  "B0D1P7SC46":{"sellerSku":"Helett H65C 2in1 Thermal Printer","finalName":"Helett H65C 2in1 Thermal Printer"},
+  "B0BRXVQ85M":{"sellerSku":"UNIY UY20+ Mini Led projector","finalName":"UNIY UY20+ Mini Led projector"},
+  "B0DTNVQ34H":{"sellerSku":"HE24 Label Tape","finalName":"12x30 HE24 labels"},
+  "B0FLV3V1W4":{"sellerSku":"Helett H65Clite Printer","finalName":"H65C Lite"},
+  "B0FZSCW83R":{"sellerSku":"Helett H75C Printer","finalName":"H65C Mini Printer (New)"},
+  "B0BD9191XX":{"sellerSku":"UY400 mini Led Projector","finalName":"UY400 mini Led Projector"},
+  "B0FGCT1MWB":{"sellerSku":"Helett Ht15 Desktop Barcode Scanner","finalName":"HT15 wired desktop scanner"},
+  "B0DQGSMG4N":{"sellerSku":"Helett Label Paper 4x6","finalName":"Helett Label Paper 4x6"},
+  "B091TCSG4D":{"sellerSku":"UNIY UY200","finalName":"UNIY UY200"},
+  "B0CR75SMCQ":{"sellerSku":"H41","finalName":"H41"},
+  "B07T85LWH7":{"sellerSku":"Yuntab 7 inch 3G Unlocked","finalName":"Yuntab 7 inch 3G Unlocked"},
+  "B09TY1SZP6":{"sellerSku":"New UY46 FBA","finalName":"New UY46 FBA"},
+  "B0DTQ3ZCBH":{"sellerSku":"HE24 Thermal Label Tape","finalName":"15X50 HE24 labels"},
+  "B0DRL8ZDWX":{"sellerSku":"Helett H30C Lite Printer","finalName":"Helett H30C Lite Printer"},
+  "B086ZFW6HD":{"sellerSku":"FILPO Soap Dispenser","finalName":"FILPO Soap Dispenser"},
+  "B0BJMLX4RR":{"sellerSku":"UY10 Wired Mic","finalName":"UY10 Wired Mic"},
+  "B0CQTK12SW":{"sellerSku":"Rice-Cooker-Black","finalName":"Rice-Cooker-Black"},
+  "B0DQGQY98X":{"sellerSku":"Helett HE760 Mobile Printer","finalName":"Helett HE760 Mobile Printer"},
+  "B09K4M1JSN":{"sellerSku":"UNIY UY 46 Projector","finalName":"UNIY UY 46 Projector"},
+  "B0D9T8R3W8":{"sellerSku":"Helett H01 Label Holder FBA","finalName":"H01 Label Holder"},
+  "B09TWLRXZ3":{"sellerSku":"UNIY A1 128 GB SdCard","finalName":"UNIY A1 128 GB SdCard"},
+  "B0FKZPDH66":{"sellerSku":"Helett H30C Pro Printer","finalName":"H30C pro Aiyin"},
+  "B07Q5PC3SV":{"sellerSku":"UC 40+ Projector","finalName":"UC 40+ Projector"},
+  "B0F6MXY655":{"sellerSku":"HT20proL Wirelss Barcode Scanner MFN","finalName":"HT20proL Wirelss Barcode Scanner MFN"},
+  "B0BRN9ZGL1":{"sellerSku":"UY-TTH9-BCAS","finalName":"UY-TTH9-BCAS"},
+  "B0BLV54ZQK":{"sellerSku":"UY 14 UHF Wireless MIC","finalName":"UY 14 wireless mic"},
+  "B0CC8ZFPRX":{"sellerSku":"HT510 Barcode Scanner","finalName":"HT510 Barcode Scanner"},
+  "B0DD7RS56N":{"sellerSku":"Helett Z567 Tyre Inflator FBA","finalName":"Helett Z567 Tyre Inflator FBA"},
+  "B0CB8X5RCN":{"sellerSku":"UNIY UY85 kids smart watch","finalName":"UNIY UY85 kids smart watch"},
+  "B0C8NNB48Z":{"sellerSku":"UY510 Barcode Scanner","finalName":"UY510 Barcode Scanner"},
+  "B08PSLZYZV":{"sellerSku":"UC20 mini projector","finalName":"UC20 mini projector"},
+  "B0DBCW1PS4":{"sellerSku":"UNIY UY720 Smartdoor Lock FBA","finalName":"UY720 door lock"},
+  "B0CQM5THV3":{"sellerSku":"ECO- D3-BT","finalName":"BT Sound bar"},
+  "B0GDKY6QHN":{"sellerSku":"Helett infiStick android stick","finalName":"Helett infiStick Tv Stick"},
+  "B0FGTMFZFM":{"sellerSku":"MO-DT5V-SO2M","finalName":"MO-DT5V-SO2M"},
+  "B0DGCG6MN4":{"sellerSku":"Helett HE760 Receipt Printer FBA","finalName":"Helett HE760 Receipt Printer FBA"},
+  "B0CR7JGRYJ":{"sellerSku":"SKU: OFFICE_LOCK_BLACK_30-100","finalName":"SKU: OFFICE_LOCK_BLACK_30-100"},
+  "B0FHQSL9DH":{"sellerSku":"Helett H30CPro Printer","finalName":"Helett H30CPro Printer"},
+  "B0CMMMJ5WY":{"sellerSku":"Helett HT35 Dual microphone","finalName":"Helett HT35 Dual microphone"}
 };
 
 function resolveSkuName(asin, fallback) {
@@ -616,21 +631,31 @@ function downloadExcel(){
   const exportData = filteredRows.map(r => {
     const flags = r.issues && r.issues.length ? r.issues.map(i => i.label).join(', ') : 'OK';
     return {
-      'SKU':             r.sku,
-      'ASIN':            r.asin,
-      'FC Sellable':     r.fc_sellable,
-      'FC Unsellable':   r.fc_unsellable,
-      'FBA Available':   r.fba_available,
-      'FBA Unsellable':  r.fba_unsellable,
-      'Inbound':         r.inbound,
-      'Total Sellable':  r.total,
-      'Unit Cost (₹)':   r.unit_cost > 0 ? r.unit_cost : '',
-      'Total Cost (₹)':  r.total_cost > 0 ? r.total_cost : '',
-      'Status Flags':    flags
+      'SKU':                      r.sku,
+      'ASIN':                     r.asin,
+      'FC Sellable':              r.fc_sellable,
+      'FC Unsellable':            r.fc_unsellable,
+      'FBA Available':            r.fba_available,
+      'FBA Unsellable':           r.fba_unsellable,
+      'Inbound (pre-FC)':         r.inbound,
+      'Processing/Unavailable':   r.processing,
+      'FC Transfer':              r.fc_transfer,
+      'FC Processing':            r.fc_process,
+      'Received (at FC)':         r.received,
+      'Customer Reserved':        r.cust_reserved,
+      'Total Sellable':           r.total,
+      'Grand Total (all states)': r.grand_total,
+      'Unit Cost (₹)':            r.unit_cost > 0 ? r.unit_cost : '',
+      'Total Cost (₹)':           r.total_cost > 0 ? r.total_cost : '',
+      'Status Flags':             flags
     };
   });
   const ws = XLSX.utils.json_to_sheet(exportData);
-  ws['!cols'] = [{wch:40},{wch:16},{wch:12},{wch:14},{wch:13},{wch:14},{wch:10},{wch:10},{wch:14},{wch:16},{wch:35}];
+  ws['!cols'] = [
+    {wch:40},{wch:16},{wch:12},{wch:14},{wch:13},{wch:14},
+    {wch:16},{wch:22},{wch:14},{wch:16},{wch:18},{wch:18},
+    {wch:14},{wch:22},{wch:14},{wch:16},{wch:35}
+  ];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Inventory');
   const today = new Date().toISOString().slice(0,10);
@@ -709,58 +734,108 @@ function detectCol(headers,patterns){
 }
 
 // ══════════════════════════════════════════
-// BUILD INBOUND MAP from FBAInvReport
+// BUILD TRANSIT MAPS — FULL PIPELINE TRACKING
 // ══════════════════════════════════════════
-function buildInboundMap(rpt){
-  const bySkuMap  = new Map();
-  const byAsinMap = new Map();
+function buildTransitMaps(rpt) {
+  // Each map: key = ASIN (or SKU fallback), value = total units in that state
+  const maps = {
+    inbound:    new Map(), // inbound-quantity: notified, shipment not yet created/sent
+    working:    new Map(), // inbound-working:  shipment plan created, not yet sent
+    shipped:    new Map(), // inbound-shipped:  boxes in transit to Amazon FC
+    received:   new Map(), // inbound-received: Amazon received boxes, still counting
+    fcTransfer: new Map(), // Reserved FC Transfer: moving between FCs
+    fcProcess:  new Map(), // Reserved FC Processing: being labeled/prepped inside FC
+    custOrder:  new Map(), // Reserved Customer Order: reserved for pending orders
+  };
 
-  if(!rpt.length){
-    dbg('FBAInvReport: sheet empty or not found, inbound will be 0 for all SKUs');
-    return {bySkuMap, byAsinMap};
+  if (!rpt.length) {
+    dbg('FBAInvReport: empty/not found — all transit quantities = 0');
+    return maps;
   }
 
   const rh = Object.keys(rpt[0]);
-  const rSkuCol  = detectCol(rh, ['seller-sku','sellersku','sku','msku','merchant-sku']);
-  const rAsinCol = detectCol(rh, ['asin']);
-  const rQtyCol  = detectCol(rh, ['inbound-quantity','inboundquantity','inbound quantity','inbound-qty','inboundqty','inbound']);
 
-  dbg('FBAInvReport cols → sku:',rSkuCol,'asin:',rAsinCol,'inbound-qty:',rQtyCol);
+  // ── Intelligent column resolution ──
+  const cols = {
+    sku:        detectCol(rh, ['seller-sku','sellersku','sku','msku','merchant-sku']),
+    asin:       detectCol(rh, ['asin']),
+    // Pre-FC pipeline
+    inbound:    detectCol(rh, ['inbound-quantity','inboundquantity','inbound quantity','inbound qty']),
+    working:    detectCol(rh, ['inbound-working','inboundworking','working']),
+    shipped:    detectCol(rh, ['inbound-shipped','inboundshipped']),
+    received:   detectCol(rh, ['inbound-received','inboundreceived']),
+    // Inside-FC states
+    fcTransfer: detectCol(rh, ['reserved fc transfer','reservedfctransfer','fc-transfer-quantity','fctransfer','fc transfer']),
+    fcProcess:  detectCol(rh, ['reserved fc processing','reservedfcprocessing','fc-processing-quantity','fcprocessing','fc processing']),
+    custOrder:  detectCol(rh, ['reserved customer order','reservedcustomerorder','customer-orders-quantity','customerorder','customer order']),
+  };
 
-  if(!rQtyCol){
-    dbg('WARNING: inbound-quantity column not found in FBAInvReport. Headers:',rh.join(', '));
-    return {bySkuMap, byAsinMap};
-  }
+  dbg('Transit cols resolved:', JSON.stringify(cols));
 
-  for(const row of rpt){
-    const qty = toNum(row[rQtyCol]);
-    if(!qty) continue;
+  const dataFields = ['inbound','working','shipped','received','fcTransfer','fcProcess','custOrder'];
 
-    if(rSkuCol){
-      const sku = norm(row[rSkuCol]);
-      if(sku && sku !== 'SELLER-SKU' && sku !== 'SKU'){
-        bySkuMap.set(sku, (bySkuMap.get(sku)||0) + qty);
+  for (const row of rpt) {
+    const asin = cols.asin ? norm(row[cols.asin]) : null;
+    const sku  = cols.sku  ? norm(row[cols.sku])  : null;
+    if ((!asin || asin === 'ASIN') && (!sku || sku === 'SKU' || sku === 'SELLER-SKU')) continue;
+
+    // Primary key: ASIN preferred, SKU fallback
+    const primaryKey = (asin && asin !== 'ASIN') ? asin : sku;
+
+    for (const field of dataFields) {
+      if (!cols[field]) continue;
+      const qty = toNum(row[cols[field]]);
+      if (!qty) continue;
+      maps[field].set(primaryKey, (maps[field].get(primaryKey) || 0) + qty);
+      // Cross-index: if primary key is ASIN, also store by SKU so resolveTransit hits either
+      if (primaryKey === asin && sku && sku !== asin && sku !== 'SKU') {
+        maps[field].set(sku, (maps[field].get(sku) || 0) + qty);
       }
     }
-    if(rAsinCol){
-      const asin = norm(row[rAsinCol]);
-      if(asin && asin !== 'ASIN'){
-        byAsinMap.set(asin, (byAsinMap.get(asin)||0) + qty);
-      }
-    }
   }
 
-  dbg('Inbound map → by-sku entries:',bySkuMap.size,'by-asin entries:',byAsinMap.size);
-  return {bySkuMap, byAsinMap};
+  // Debug totals per field
+  for (const field of dataFields) {
+    const total = [...maps[field].values()].reduce((a,b)=>a+b, 0);
+    if (total) dbg(`  Transit[${field}]: ${maps[field].size} keys, ${total} units`);
+  }
+
+  return maps;
+}
+
+// ── Resolve all transit quantities for one SKU/ASIN ──
+function resolveTransit(resolvedSku, asin, transitMaps) {
+  function get(map) {
+    // Try ASIN first (more reliable), then normalized SKU
+    return map.get(norm(asin)) || map.get(norm(resolvedSku)) || 0;
+  }
+
+  const inbound    = get(transitMaps.inbound);
+  const working    = get(transitMaps.working);
+  const shipped    = get(transitMaps.shipped);
+  const received   = get(transitMaps.received);
+  const fcTransfer = get(transitMaps.fcTransfer);
+  const fcProcess  = get(transitMaps.fcProcess);
+  const custOrder  = get(transitMaps.custOrder);
+
+  // "Inbound" as shown in dashboard = units that haven't reached the FC yet
+  // (working + shipped covers this; raw inbound-quantity is a superset that
+  // Amazon sometimes uses differently — include all to be safe)
+  const inboundTotal = inbound + working + shipped;
+
+  // "Processing / Unavailable" = units Amazon has received but aren't available yet
+  const processing = received + fcTransfer + fcProcess;
+
+  return { inboundTotal, processing, fcTransfer, fcProcess, received, custOrder, working, shipped, inbound };
 }
 
 // ══════════════════════════════════════════
 // MERGE
 // ══════════════════════════════════════════
-function mergeData(sell,unsell,fba,rpt){
+function mergeData(sell, unsell, fba, rpt) {
   step('Merging by ASIN…');
 
-  const {bySkuMap, byAsinMap} = buildInboundMap(rpt);
+  const transitMaps = buildTransitMaps(rpt);
 
   const sh=sell.length?Object.keys(sell[0]):[];
   const sc={
@@ -794,7 +869,6 @@ function mergeData(sell,unsell,fba,rpt){
   if(sc.asin&&sc.qty){
     for(const row of sell){
       const asin=norm(row[sc.asin]);
-      // ── BLOCKLIST CHECK ──
       if(!asin||asin==='-'||asin==='ASIN'||ASIN_BLOCKLIST.has(asin))continue;
       sellMap.set(asin,(sellMap.get(asin)||0)+toNum(row[sc.qty]));
       const sku=str(row[sc.sku]||'');
@@ -806,34 +880,28 @@ function mergeData(sell,unsell,fba,rpt){
   if(uc.asin&&lastDC){
     for(const row of unsell){
       const asin=norm(row[uc.asin]);
-      // ── BLOCKLIST CHECK ──
       if(!asin||asin==='-'||asin==='ASIN'||ASIN_BLOCKLIST.has(asin))continue;
       unMap.set(asin,(unMap.get(asin)||0)+toNum(row[lastDC]));
     }
   }
 
-  const fbaAvailMap=new Map(), fbaUnsellMap=new Map(), fbaSkuMap=new Map();
-  const useConditionFormat = !!(fc.condition && fc.qty);
+  const fbaAvailMap=new Map(),fbaUnsellMap=new Map(),fbaSkuMap=new Map();
+  const useConditionFormat=!!(fc.condition&&fc.qty);
 
   if(useConditionFormat){
     for(const row of fba){
       const asin=norm(row[fc.asin]);
-      // ── BLOCKLIST CHECK ──
       if(!asin||asin==='-'||asin==='ASIN'||ASIN_BLOCKLIST.has(asin))continue;
       const sku=str(row[fc.sku]||'');
       const condition=norm(row[fc.condition]);
       const qty=toNum(row[fc.qty]);
       if(sku&&!fbaSkuMap.has(asin))fbaSkuMap.set(asin,sku);
-      if(condition==='SELLABLE'){
-        fbaAvailMap.set(asin,(fbaAvailMap.get(asin)||0)+qty);
-      } else {
-        fbaUnsellMap.set(asin,(fbaUnsellMap.get(asin)||0)+qty);
-      }
+      if(condition==='SELLABLE'){fbaAvailMap.set(asin,(fbaAvailMap.get(asin)||0)+qty);}
+      else{fbaUnsellMap.set(asin,(fbaUnsellMap.get(asin)||0)+qty);}
     }
   } else {
     for(const row of fba){
       const asin=norm(row[fc.asin]);
-      // ── BLOCKLIST CHECK ──
       if(!asin||asin==='-'||asin==='ASIN'||ASIN_BLOCKLIST.has(asin))continue;
       const sku=str(row[fc.sku]||'');
       if(sku&&!fbaSkuMap.has(asin))fbaSkuMap.set(asin,sku);
@@ -842,19 +910,10 @@ function mergeData(sell,unsell,fba,rpt){
     }
   }
 
-  function resolveInbound(resolvedSku, asin){
-    const skuKey = norm(resolvedSku);
-    if(bySkuMap.has(skuKey)) return bySkuMap.get(skuKey);
-    const asinKey = norm(asin);
-    if(byAsinMap.has(asinKey)) return byAsinMap.get(asinKey);
-    return 0;
-  }
-
   const merged=[];
   const fbaSet=new Set([...fbaAvailMap.keys(),...fbaUnsellMap.keys(),...fbaSkuMap.keys()]);
 
   for(const asin of fbaSet){
-    // ── BLOCKLIST CHECK (safety net) ──
     if(ASIN_BLOCKLIST.has(asin))continue;
     const sku        = resolveSkuName(asin, fbaSkuMap.get(asin)||'--');
     const fbaAvail   = fbaAvailMap.get(asin)||0;
@@ -863,27 +922,69 @@ function mergeData(sell,unsell,fba,rpt){
     const fcSell     = sellMap.get(asin)??0;
     const fcUnsell   = unMap.get(asin)??0;
     const total      = (hasFCMatch?fcSell:0)+fbaAvail;
-    const inbound    = resolveInbound(sku, asin);
+
+    const transit    = resolveTransit(sku, asin, transitMaps);
+    // Grand total = sellable + everything in-flight (zero disappearance guarantee)
+    const grand_total = total + transit.inboundTotal + transit.processing + transit.custOrder;
+
     const unit_cost  = COST_MAP[asin]||0;
     const total_cost = unit_cost * total;
-    const issues     = buildIssues({hasFCMatch,isFCOnly:false,fcSell,fbaAvail,fcUnsell,fbaUnsell,total});
-    merged.push({sku,asin,fc_sellable:hasFCMatch?fcSell:0,fc_unsellable:hasFCMatch?fcUnsell:0,fba_available:fbaAvail,fba_unsellable:fbaUnsell,inbound,total,unit_cost,total_cost,hasFCMatch,source:'fba',issues,issue_count:issues.length});
+    const issues     = buildIssues({hasFCMatch,isFCOnly:false,fcSell,fbaAvail,fcUnsell,fbaUnsell,total,transit});
+
+    merged.push({
+      sku, asin,
+      fc_sellable:   hasFCMatch?fcSell:0,
+      fc_unsellable: hasFCMatch?fcUnsell:0,
+      fba_available: fbaAvail,
+      fba_unsellable: fbaUnsell,
+      inbound:       transit.inboundTotal,   // working + shipped (pre-FC)
+      processing:    transit.processing,     // received + fc_transfer + fc_process
+      fc_transfer:   transit.fcTransfer,
+      fc_process:    transit.fcProcess,
+      received:      transit.received,
+      cust_reserved: transit.custOrder,
+      total,
+      grand_total,
+      unit_cost, total_cost,
+      hasFCMatch, source:'fba',
+      issues, issue_count:issues.length
+    });
   }
 
   const allFCAsins=new Set([...sellMap.keys(),...unMap.keys()]);
   for(const asin of allFCAsins){
-    // ── BLOCKLIST CHECK (safety net) ──
     if(ASIN_BLOCKLIST.has(asin))continue;
     if(fbaSet.has(asin))continue;
     const fcSell   = sellMap.get(asin)??0;
     const fcUnsell = unMap.get(asin)??0;
     const sku      = resolveSkuName(asin, sellSku.get(asin)||'--');
     const total    = fcSell;
-    const inbound  = resolveInbound(sku, asin);
+
+    const transit  = resolveTransit(sku, asin, transitMaps);
+    const grand_total = total + transit.inboundTotal + transit.processing + transit.custOrder;
+
     const unit_cost  = COST_MAP[asin]||0;
     const total_cost = unit_cost * total;
-    const issues   = buildIssues({hasFCMatch:true,isFCOnly:true,fcSell,fbaAvail:0,fcUnsell,fbaUnsell:0,total});
-    merged.push({sku,asin,fc_sellable:fcSell,fc_unsellable:fcUnsell,fba_available:0,fba_unsellable:0,inbound,total,unit_cost,total_cost,hasFCMatch:true,source:'fc',issues,issue_count:issues.length});
+    const issues     = buildIssues({hasFCMatch:true,isFCOnly:true,fcSell,fbaAvail:0,fcUnsell,fbaUnsell:0,total,transit});
+
+    merged.push({
+      sku, asin,
+      fc_sellable:   fcSell,
+      fc_unsellable: fcUnsell,
+      fba_available: 0,
+      fba_unsellable:0,
+      inbound:       transit.inboundTotal,
+      processing:    transit.processing,
+      fc_transfer:   transit.fcTransfer,
+      fc_process:    transit.fcProcess,
+      received:      transit.received,
+      cust_reserved: transit.custOrder,
+      total,
+      grand_total,
+      unit_cost, total_cost,
+      hasFCMatch:true, source:'fc',
+      issues, issue_count:issues.length
+    });
   }
 
   dbg('Merged (after blocklist):',merged.length);
@@ -893,25 +994,32 @@ function mergeData(sell,unsell,fba,rpt){
 // ══════════════════════════════════════════
 // ISSUE BUILDER
 // ══════════════════════════════════════════
-function buildIssues({hasFCMatch,isFCOnly,fcSell,fbaAvail,fcUnsell,fbaUnsell,total}){
+function buildIssues({hasFCMatch,isFCOnly,fcSell,fbaAvail,fcUnsell,fbaUnsell,total,transit}){
   const issues=[];
   if(!hasFCMatch){
-    issues.push({type:'mm',label:'ASIN Mismatch',msg:'This ASIN is present in FBA inventory but was not found in any FC sheet. FC Sellable and Unsellable values will show as 0.'});
+    issues.push({type:'mm',label:'ASIN Mismatch',msg:'This ASIN is in FBA inventory but not found in any FC sheet. FC values show as 0.'});
   }
   if(isFCOnly){
-    issues.push({type:'fo',label:'FC Only',msg:'This ASIN exists in the FC sheets but has no matching FBA inventory record. FBA values are shown as 0.'});
+    issues.push({type:'fo',label:'FC Only',msg:'This ASIN exists in FC sheets but has no FBA inventory record. FBA values are 0.'});
   }
   if(total>0&&total<50){
-    issues.push({type:'ls',label:'Low Stock',msg:`Total sellable is ${total} units, which is below the low-stock threshold of 50. Consider restocking soon.`});
+    issues.push({type:'ls',label:'Low Stock',msg:`Total sellable is ${total} units — below the low-stock threshold of 50. Consider restocking.`});
   }
   if(total===0&&!isFCOnly&&hasFCMatch){
-    issues.push({type:'ls',label:'Out of Stock',msg:'Total sellable units is 0. No stock available in FC or FBA.'});
+    issues.push({type:'ls',label:'Out of Stock',msg:'Total sellable is 0. No stock in FC or FBA.'});
   }
   const totUn=fcUnsell+fbaUnsell;
   if(totUn>0&&total>0&&totUn>=total){
-    issues.push({type:'hu',label:'High Unsellable',msg:`Unsellable units (${totUn}) equals or exceeds sellable (${total}). Review condition, disposal or reprocessing.`});
+    issues.push({type:'hu',label:'High Unsellable',msg:`Unsellable (${totUn}) equals or exceeds sellable (${total}). Review for disposal or reprocessing.`});
   } else if(totUn>0&&total>0&&totUn/total>0.4){
-    issues.push({type:'hu',label:'High Unsellable',msg:`Unsellable (${totUn}) is ${Math.round(totUn/total*100)}% of sellable (${total}), above the 40% warning threshold.`});
+    issues.push({type:'hu',label:'High Unsellable',msg:`Unsellable (${totUn}) is ${Math.round(totUn/total*100)}% of sellable — above 40% warning threshold.`});
+  }
+  // Transit warning: units in processing that haven't become available
+  if(transit&&(transit.inboundTotal+transit.processing)>0){
+    const transitTotal=transit.inboundTotal+transit.processing;
+    if(total===0&&transitTotal>0){
+      issues.push({type:'tr',label:'In Transit',msg:`${transitTotal} units are currently in transit/processing states (inbound: ${transit.inboundTotal}, processing: ${transit.processing}). They will appear as Available once Amazon completes receiving.`});
+    }
   }
   return issues;
 }
@@ -920,23 +1028,44 @@ function buildIssues({hasFCMatch,isFCOnly,fcSell,fbaAvail,fcUnsell,fbaUnsell,tot
 // KPIs
 // ══════════════════════════════════════════
 function renderKPIs(rows){
-  set('k0',rows.reduce((s,r)=>s+r.total,0).toLocaleString());
-  set('k1',rows.reduce((s,r)=>s+r.fc_sellable,0).toLocaleString());
-  set('k2',rows.reduce((s,r)=>s+r.fba_available,0).toLocaleString());
-  set('k7',rows.reduce((s,r)=>s+r.inbound,0).toLocaleString());
-  set('k3',rows.reduce((s,r)=>s+r.fc_unsellable+r.fba_unsellable,0).toLocaleString());
-  set('k4',rows.filter(r=>r.total>=0&&r.total<50).length.toLocaleString());
-  set('k5',rows.filter(r=>r.issue_count>0).length.toLocaleString());
+  const grandTotal = rows.reduce((s,r)=>s+r.grand_total,0);
+  set('k_grand', grandTotal.toLocaleString());
+  set('k0',  rows.reduce((s,r)=>s+r.total,0).toLocaleString());
+  set('k1',  rows.reduce((s,r)=>s+r.fc_sellable,0).toLocaleString());
+  set('k2',  rows.reduce((s,r)=>s+r.fba_available,0).toLocaleString());
+  set('k7',  rows.reduce((s,r)=>s+r.inbound,0).toLocaleString());
+  set('k_processing', rows.reduce((s,r)=>s+r.processing,0).toLocaleString());
+  set('k3',  rows.reduce((s,r)=>s+r.fc_unsellable+r.fba_unsellable,0).toLocaleString());
+  set('k4',  rows.filter(r=>r.total>=0&&r.total<50).length.toLocaleString());
+  set('k5',  rows.filter(r=>r.issue_count>0).length.toLocaleString());
   const totalCost = rows.reduce((s,r)=>s+r.total_cost,0);
   set('k6', fmtCur(totalCost));
   $('k6').title = fmtCurFull(totalCost);
+
+  // Transit banner
+  const tbInbound    = rows.reduce((s,r)=>s+r.inbound,0);
+  const tbReceived   = rows.reduce((s,r)=>s+r.received,0);
+  const tbProcessing = rows.reduce((s,r)=>s+(r.fc_process||0),0);
+  const tbTransfer   = rows.reduce((s,r)=>s+(r.fc_transfer||0),0);
+  const tbCustOrder  = rows.reduce((s,r)=>s+r.cust_reserved,0);
+  const anyTransit   = tbInbound+tbReceived+tbProcessing+tbTransfer+tbCustOrder>0;
+
+  set('tb-inbound',    tbInbound.toLocaleString());
+  set('tb-received',   tbReceived.toLocaleString());
+  set('tb-processing', tbProcessing.toLocaleString());
+  set('tb-transfer',   tbTransfer.toLocaleString());
+  set('tb-custorder',  tbCustOrder.toLocaleString());
+  set('tb-grand',      grandTotal.toLocaleString());
+
+  $('transit-banner').style.display = 'flex';
 }
 
 // ══════════════════════════════════════════
 // CHARTS
 // ══════════════════════════════════════════
 function renderCharts(rows){
-  const top15=[...rows].filter(r=>r.fc_sellable>0||r.fba_available>0||r.inbound>0)
+  const top15=[...rows]
+    .filter(r=>r.fc_sellable>0||r.fba_available>0||r.inbound>0||r.processing>0)
     .sort((a,b)=>(b.fc_sellable+b.fba_available)-(a.fc_sellable+a.fba_available))
     .slice(0,15);
   const labels=top15.map(r=>{const s=str(r.sku);return s.length>16?s.slice(0,15)+'…':s;});
@@ -945,19 +1074,28 @@ function renderCharts(rows){
   barChart=new Chart($('cbar').getContext('2d'),{
     type:'bar',
     data:{labels,datasets:[
-      {label:'FC Sellable',data:top15.map(r=>r.fc_sellable),backgroundColor:'rgba(99,102,241,0.8)',borderColor:'#6366f1',borderWidth:1,borderRadius:4,borderSkipped:false},
-      {label:'FBA Available',data:top15.map(r=>r.fba_available),backgroundColor:'rgba(56,189,248,0.8)',borderColor:'#38bdf8',borderWidth:1,borderRadius:4,borderSkipped:false},
-      {label:'Inbound',data:top15.map(r=>r.inbound),backgroundColor:'rgba(244,114,182,0.8)',borderColor:'#f472b6',borderWidth:1,borderRadius:4,borderSkipped:false},
+      {label:'FC Sellable',   data:top15.map(r=>r.fc_sellable),   backgroundColor:'rgba(99,102,241,0.8)', borderColor:'#6366f1',borderWidth:1,borderRadius:4,borderSkipped:false},
+      {label:'FBA Available', data:top15.map(r=>r.fba_available), backgroundColor:'rgba(56,189,248,0.8)', borderColor:'#38bdf8',borderWidth:1,borderRadius:4,borderSkipped:false},
+      {label:'Inbound',       data:top15.map(r=>r.inbound),       backgroundColor:'rgba(244,114,182,0.8)',borderColor:'#f472b6',borderWidth:1,borderRadius:4,borderSkipped:false},
+      {label:'Processing',    data:top15.map(r=>r.processing),    backgroundColor:'rgba(251,191,36,0.8)', borderColor:'#fbbf24',borderWidth:1,borderRadius:4,borderSkipped:false},
     ]},
     options:{
       responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
       plugins:{
         legend:{display:false},
-        tooltip:{backgroundColor:'#0a0b10',borderColor:'#2a2d3e',borderWidth:1,titleColor:'#e8eaf6',bodyColor:'#9395a5',padding:10,callbacks:{title:items=>top15[items[0].dataIndex].sku}},
+        tooltip:{backgroundColor:'#0a0b10',borderColor:'#2a2d3e',borderWidth:1,titleColor:'#e8eaf6',bodyColor:'#9395a5',padding:10,
+          callbacks:{
+            title:items=>top15[items[0].dataIndex].sku,
+            afterBody:items=>{
+              const r=top15[items[0].dataIndex];
+              return [`Grand Total: ${r.grand_total.toLocaleString()}`];
+            }
+          }
+        },
       },
       scales:{
-        x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#5f6170',font:{size:10,family:'IBM Plex Mono'},maxRotation:35}},
+        x:{stacked:false,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#5f6170',font:{size:10,family:'IBM Plex Mono'},maxRotation:35}},
         y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#5f6170',font:{size:10,family:'IBM Plex Mono'}}},
       }
     }
@@ -974,37 +1112,22 @@ function renderCharts(rows){
   const hasD=grand>0;
   donutChart=new Chart($('cdonut').getContext('2d'),{
     type:'doughnut',
-    data:{
-      labels:['FC Unsellable','FBA Unsellable'],
-      datasets:[{data:hasD?[fcUn,fbaUn]:[1,1],backgroundColor:hasD?['rgba(167,139,250,0.85)','rgba(245,158,11,0.85)']:['rgba(60,63,90,0.4)','rgba(60,63,90,0.4)'],borderColor:'#1e2130',borderWidth:2,hoverOffset:6}]
-    },
+    data:{labels:['FC Unsellable','FBA Unsellable'],datasets:[{data:hasD?[fcUn,fbaUn]:[1,1],backgroundColor:hasD?['rgba(167,139,250,0.85)','rgba(245,158,11,0.85)']:['rgba(60,63,90,0.4)','rgba(60,63,90,0.4)'],borderColor:'#1e2130',borderWidth:2,hoverOffset:6}]},
     options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{display:false},tooltip:{enabled:hasD,backgroundColor:'#0a0b10',borderColor:'#2a2d3e',borderWidth:1,titleColor:'#e8eaf6',bodyColor:'#9395a5',padding:10}}}
   });
 
-  const costRows = [...rows].filter(r=>r.total_cost>0).sort((a,b)=>b.total_cost-a.total_cost).slice(0,15);
-  const costLabels = costRows.map(r=>{const s=str(r.sku);return s.length>16?s.slice(0,15)+'…':s;});
+  const costRows=[...rows].filter(r=>r.total_cost>0).sort((a,b)=>b.total_cost-a.total_cost).slice(0,15);
+  const costLabels=costRows.map(r=>{const s=str(r.sku);return s.length>16?s.slice(0,15)+'…':s;});
 
   if(costBarChart)costBarChart.destroy();
   costBarChart=new Chart($('ccostbar').getContext('2d'),{
     type:'bar',
-    data:{labels:costLabels,datasets:[{
-      label:'Total Cost (₹)',
-      data:costRows.map(r=>r.total_cost),
-      backgroundColor:'rgba(20,184,166,0.75)',
-      borderColor:'#14b8a6',
-      borderWidth:1,borderRadius:4,borderSkipped:false
-    }]},
+    data:{labels:costLabels,datasets:[{label:'Total Cost (₹)',data:costRows.map(r=>r.total_cost),backgroundColor:'rgba(20,184,166,0.75)',borderColor:'#14b8a6',borderWidth:1,borderRadius:4,borderSkipped:false}]},
     options:{
       responsive:true,maintainAspectRatio:false,
-      plugins:{
-        legend:{display:false},
-        tooltip:{backgroundColor:'#0a0b10',borderColor:'#2a2d3e',borderWidth:1,titleColor:'#e8eaf6',bodyColor:'#9395a5',padding:10,
-          callbacks:{
-            title:items=>costRows[items[0].dataIndex].sku,
-            label:items=>`₹${items.raw.toLocaleString('en-IN',{maximumFractionDigits:0})} (${costRows[items.dataIndex].total} units × ₹${costRows[items.dataIndex].unit_cost.toLocaleString('en-IN')})`
-          }
-        },
-      },
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#0a0b10',borderColor:'#2a2d3e',borderWidth:1,titleColor:'#e8eaf6',bodyColor:'#9395a5',padding:10,
+        callbacks:{title:items=>costRows[items[0].dataIndex].sku,label:items=>`₹${items.raw.toLocaleString('en-IN',{maximumFractionDigits:0})} (${costRows[items.dataIndex].total} units × ₹${costRows[items.dataIndex].unit_cost.toLocaleString('en-IN')})`}
+      }},
       scales:{
         x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#5f6170',font:{size:10,family:'IBM Plex Mono'},maxRotation:35}},
         y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#5f6170',font:{size:10,family:'IBM Plex Mono'},callback:v=>fmtCur(v)}},
@@ -1012,36 +1135,22 @@ function renderCharts(rows){
     }
   });
 
-  const top10cost = [...rows].filter(r=>r.unit_cost>0).sort((a,b)=>b.unit_cost-a.unit_cost).slice(0,10);
-  const totalPortfolioCost = rows.reduce((s,r)=>s+r.total_cost,0);
+  const top10cost=[...rows].filter(r=>r.unit_cost>0).sort((a,b)=>b.unit_cost-a.unit_cost).slice(0,10);
+  const totalPortfolioCost=rows.reduce((s,r)=>s+r.total_cost,0);
   set('dctotal', fmtCur(totalPortfolioCost));
 
-  const donutColors = ['#14b8a6','#6366f1','#f59e0b','#38bdf8','#a78bfa','#22c55e','#ef4444','#fb923c','#e879f9','#64748b'];
+  const donutColors=['#14b8a6','#6366f1','#f59e0b','#38bdf8','#a78bfa','#22c55e','#ef4444','#fb923c','#e879f9','#64748b'];
 
   if(costDonutChart)costDonutChart.destroy();
-  const hasCost = top10cost.some(r=>r.total_cost>0);
+  const hasCost=top10cost.some(r=>r.total_cost>0);
   costDonutChart=new Chart($('ccostdonut').getContext('2d'),{
     type:'doughnut',
-    data:{
-      labels:top10cost.map(r=>r.sku),
-      datasets:[{
-        data:hasCost?top10cost.map(r=>r.total_cost>0?r.total_cost:0.001):[1],
-        backgroundColor:hasCost?donutColors.slice(0,top10cost.length):['rgba(60,63,90,0.4)'],
-        borderColor:'#1e2130',borderWidth:2,hoverOffset:6
-      }]
-    },
-    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{
-      legend:{display:false},
-      tooltip:{enabled:hasCost,backgroundColor:'#0a0b10',borderColor:'#2a2d3e',borderWidth:1,titleColor:'#e8eaf6',bodyColor:'#9395a5',padding:10,
-        callbacks:{
-          label:ctx=>`₹${ctx.raw.toLocaleString('en-IN',{maximumFractionDigits:0})} (${totalPortfolioCost>0?Math.round(ctx.raw/totalPortfolioCost*100):0}%)`
-        }
-      }
-    }}
+    data:{labels:top10cost.map(r=>r.sku),datasets:[{data:hasCost?top10cost.map(r=>r.total_cost>0?r.total_cost:0.001):[1],backgroundColor:hasCost?donutColors.slice(0,top10cost.length):['rgba(60,63,90,0.4)'],borderColor:'#1e2130',borderWidth:2,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{enabled:hasCost,backgroundColor:'#0a0b10',borderColor:'#2a2d3e',borderWidth:1,titleColor:'#e8eaf6',bodyColor:'#9395a5',padding:10,callbacks:{label:ctx=>`₹${ctx.raw.toLocaleString('en-IN',{maximumFractionDigits:0})} (${totalPortfolioCost>0?Math.round(ctx.raw/totalPortfolioCost*100):0}%)`}}}}
   });
 
-  const leg = $('costdonutlegend');
-  leg.innerHTML = top10cost.map((r,i)=>`
+  const leg=$('costdonutlegend');
+  leg.innerHTML=top10cost.map((r,i)=>`
     <div class="dl-item">
       <div class="dl-sw" style="background:${donutColors[i]}"></div>
       <span style="font-size:.63rem;color:var(--text2);">${r.sku.length>18?r.sku.slice(0,17)+'…':r.sku}</span>
@@ -1056,18 +1165,16 @@ function renderTable(rows){
   set('rbadge',`${rows.length.toLocaleString()} rows`);
   set('tfc',`Showing ${rows.length.toLocaleString()} of ${allRows.length.toLocaleString()} entries`);
   if(!rows.length){
-    tbody.innerHTML=`<tr><td colspan="11"><div class="empty"><div class="ei">📦</div><p>No rows match the current filter.</p></div></td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="13"><div class="empty"><div class="ei">📦</div><p>No rows match the current filter.</p></div></td></tr>`;
     return;
   }
   tbody.innerHTML=rows.map(r=>{
     const tc=r.total<50&&r.total>=0?'ntot low':'ntot';
-    const unitCostHtml = r.unit_cost>0
-      ? `<td class="td-cost compact">${fmtCurFull(r.unit_cost)}</td>`
-      : `<td class="td-cost z compact">—</td>`;
-    const totalCostHtml = r.total_cost>0
-      ? `<td class="td-cost">${fmtCurFull(r.total_cost)}</td>`
-      : `<td class="td-cost z">—</td>`;
-    const inboundClass = r.inbound > 0 ? 'n ib compact' : 'n ib z compact';
+    const unitCostHtml=r.unit_cost>0?`<td class="td-cost compact">${fmtCurFull(r.unit_cost)}</td>`:`<td class="td-cost z compact">—</td>`;
+    const totalCostHtml=r.total_cost>0?`<td class="td-cost">${fmtCurFull(r.total_cost)}</td>`:`<td class="td-cost z">—</td>`;
+    const inboundClass=r.inbound>0?'n ib compact':'n ib z compact';
+    const procClass=r.processing>0?'n proc compact':'n proc z compact';
+    const grandClass=r.grand_total>r.total?'ngrand compact':'ntot compact';
     return `<tr>
       <td class="td-sku" title="${esc(r.sku)}">${esc(r.sku)}</td>
       <td class="td-asin">${esc(r.asin)}</td>
@@ -1075,8 +1182,10 @@ function renderTable(rows){
       <td class="n compact ${r.fc_unsellable>0?'w':'z'}">${r.fc_unsellable.toLocaleString()}</td>
       <td class="n compact ${r.fba_available>0?'g':'z'}">${r.fba_available.toLocaleString()}</td>
       <td class="n compact ${r.fba_unsellable>0?'w':'z'}">${r.fba_unsellable.toLocaleString()}</td>
-      <td class="${inboundClass}">${r.inbound > 0 ? r.inbound.toLocaleString() : '—'}</td>
+      <td class="${inboundClass}">${r.inbound>0?r.inbound.toLocaleString():'—'}</td>
+      <td class="${procClass}" title="Received: ${r.received||0}, FC Process: ${r.fc_process||0}, FC Transfer: ${r.fc_transfer||0}">${r.processing>0?r.processing.toLocaleString():'—'}</td>
       <td class="${tc} compact">${r.total.toLocaleString()}</td>
+      <td class="${grandClass}" title="Sellable + Inbound + Processing + Cust.Reserved">${r.grand_total.toLocaleString()}</td>
       ${unitCostHtml}
       ${totalCostHtml}
       <td class="td-st">${badgeHtml(r)}</td>
@@ -1095,11 +1204,18 @@ function renderTable(rows){
 
 function badgeHtml(r){
   if(!r.issues||!r.issues.length)return '';
-  return '<div class="iw">'+r.issues.map(iss=>`
-    <span class="th" tabindex="0">
-      <span class="ibadge ${iss.type}">${iss.type==='mm'?'⚠':`${iss.type==='fo'?'◈':iss.type==='ls'?'↓':'↑'} ${esc(iss.label)}`}</span>
+  return '<div class="iw">'+r.issues.map(iss=>{
+    let icon='';
+    if(iss.type==='mm')icon='⚠';
+    else if(iss.type==='fo')icon='◈';
+    else if(iss.type==='ls')icon='↓';
+    else if(iss.type==='hu')icon='↑';
+    else if(iss.type==='tr')icon='⟳';
+    return `<span class="th" tabindex="0">
+      <span class="ibadge ${iss.type}">${icon} ${esc(iss.label)}</span>
       <div class="tb"><div class="tb-t">${esc(iss.label)}</div>${esc(iss.msg)}</div>
-    </span>`).join('')+'</div>';
+    </span>`;
+  }).join('')+'</div>';
 }
 
 document.addEventListener('click',()=>document.querySelectorAll('.th.to').forEach(x=>x.classList.remove('to')));
@@ -1114,6 +1230,7 @@ function applyFilters(){
   if(chips.has('ls'))  rows=rows.filter(r=>r.issues.some(i=>i.type==='ls'));
   if(chips.has('hu'))  rows=rows.filter(r=>r.issues.some(i=>i.type==='hu'));
   if(chips.has('fo'))  rows=rows.filter(r=>r.issues.some(i=>i.type==='fo'));
+  if(chips.has('tr'))  rows=rows.filter(r=>r.issues.some(i=>i.type==='tr'));
   if(q)rows=rows.filter(r=>r.sku.toLowerCase().includes(q)||r.asin.toLowerCase().includes(q));
   if(sortCol){
     rows.sort((a,b)=>{
@@ -1127,7 +1244,7 @@ function applyFilters(){
 
 function toggleChip(name){
   chips.has(name)?chips.delete(name):chips.add(name);
-  const map={mm:'r',ls:'o',hu:'p',fo:'b'};
+  const map={mm:'r',ls:'o',hu:'p',fo:'b',tr:'y'};
   for(const[n,cls]of Object.entries(map)){
     const el=$('ch'+n);
     if(!el)continue;
