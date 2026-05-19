@@ -1,15 +1,54 @@
 <script>
 
-// ======================================
-// READ ONLY LATEST DATE COLUMN
-// FOR:
-// - Unsellable
-// - Semi Goods
-// ======================================
+// ==========================================
+// CUSTOM SHEET PARSING
+// ==========================================
+// Sellable_Inventory -> normal header row
+// Unsellable -> header starts at row 3
+// Semi Goods -> header starts at row 2
+// Latest date = RIGHT MOST DATE COLUMN
+// ==========================================
+
+function parseSheetWithHeaderRow(sheet, headerRowIndex){
+
+  const raw =
+    XLSX.utils.sheet_to_json(
+      sheet,
+      {
+        header:1,
+        defval:''
+      }
+    );
+
+  const headers =
+    raw[headerRowIndex];
+
+  const rows =
+    raw.slice(headerRowIndex + 1);
+
+  return rows.map(r=>{
+
+    const obj = {};
+
+    headers.forEach((h,i)=>{
+      obj[String(h).trim()] = r[i];
+    });
+
+    return obj;
+
+  }).filter(r=>
+    Object.values(r).some(v=>v !== '')
+  );
+}
+
+
+// ==========================================
+// GET RIGHT MOST DATE COLUMN
+// ==========================================
 
 function getLatestDateColumn(headers){
 
-  const dateCols = headers.filter(h=>{
+  const valid = headers.filter(h=>{
 
     const s = String(h).trim();
 
@@ -19,13 +58,51 @@ function getLatestDateColumn(headers){
     );
   });
 
-  return dateCols[dateCols.length - 1];
+  return valid[valid.length - 1];
 }
 
 
-// ======================================
-// BUILD MASTER SKU MAP
-// ======================================
+// ==========================================
+// FIND SKU COL
+// ==========================================
+
+function findSkuCol(headers){
+
+  return headers.find(h=>
+    String(h).toLowerCase().includes('sku')
+  );
+}
+
+
+// ==========================================
+// FIND ASIN COL
+// ==========================================
+
+function findAsinCol(headers){
+
+  return headers.find(h=>
+    String(h).toLowerCase() === 'asin'
+  );
+}
+
+
+// ==========================================
+// FIND SELLABLE QTY COL
+// ==========================================
+
+function findQtyCol(headers){
+
+  return headers.find(h=>
+    String(h).toLowerCase().includes('qty') ||
+    String(h).toLowerCase().includes('quantity') ||
+    String(h).toLowerCase().includes('stock')
+  );
+}
+
+
+// ==========================================
+// BUILD MASTER MAP
+// ==========================================
 
 function buildMergedRows(
   sellRows,
@@ -35,64 +112,57 @@ function buildMergedRows(
 
   const map = new Map();
 
-  // -----------------------------
+  // ======================================
   // SELLABLE
-  // -----------------------------
-  sellRows.forEach(r=>{
+  // ======================================
 
-    const headers = Object.keys(r);
+  if(sellRows.length){
+
+    const headers =
+      Object.keys(sellRows[0]);
 
     const skuCol =
-      headers.find(h=>
-        h.toLowerCase().includes('sku')
-      );
+      findSkuCol(headers);
 
     const asinCol =
-      headers.find(h=>
-        h.toLowerCase() === 'asin'
-      );
+      findAsinCol(headers);
 
     const qtyCol =
-      headers.find(h=>
-        h.toLowerCase().includes('qty') ||
-        h.toLowerCase().includes('stock') ||
-        h.toLowerCase().includes('quantity')
-      );
+      findQtyCol(headers);
 
-    const sku =
-      String(r[skuCol] || '').trim();
+    sellRows.forEach(r=>{
 
-    if(!sku) return;
+      const sku =
+        String(r[skuCol] || '').trim();
 
-    const asin =
-      String(r[asinCol] || '').trim();
+      if(!sku) return;
 
-    const qty =
-      toNum(r[qtyCol]);
+      map.set(sku,{
+        sku,
+        asin:
+          String(r[asinCol] || '').trim(),
+        sellable:
+          toNum(r[qtyCol]),
+        unsellable:'-',
+        semi:'-'
+      });
 
-    map.set(sku,{
-      sku,
-      asin,
-      sellable: qty,
-      unsellable: '-',
-      semi: '-'
     });
+  }
 
-  });
-
-  // -----------------------------
+  // ======================================
   // UNSELLABLE
-  // ONLY LATEST DATE
-  // -----------------------------
+  // HEADER = ROW 3
+  // LATEST = RIGHT MOST DATE
+  // ======================================
+
   if(unsellRows.length){
 
     const headers =
       Object.keys(unsellRows[0]);
 
     const skuCol =
-      headers.find(h=>
-        h.toLowerCase().includes('sku')
-      );
+      findSkuCol(headers);
 
     const latestCol =
       getLatestDateColumn(headers);
@@ -120,24 +190,25 @@ function buildMergedRows(
           unsellable:qty,
           semi:'-'
         });
+
       }
 
     });
   }
 
-  // -----------------------------
+  // ======================================
   // SEMI GOODS
-  // ONLY LATEST DATE
-  // -----------------------------
+  // HEADER = ROW 2
+  // LATEST = RIGHT MOST DATE
+  // ======================================
+
   if(semiRows.length){
 
     const headers =
       Object.keys(semiRows[0]);
 
     const skuCol =
-      headers.find(h=>
-        h.toLowerCase().includes('sku')
-      );
+      findSkuCol(headers);
 
     const latestCol =
       getLatestDateColumn(headers);
@@ -165,6 +236,7 @@ function buildMergedRows(
           unsellable:'-',
           semi:qty
         });
+
       }
 
     });
@@ -175,9 +247,9 @@ function buildMergedRows(
 }
 
 
-// ======================================
-// CREATE FINAL TABLE
-// ======================================
+// ==========================================
+// FINAL TABLE
+// ==========================================
 
 function renderMergedTable(rows){
 
@@ -200,11 +272,13 @@ function renderMergedTable(rows){
         </div>
 
         <div class="search">
+
           <input
             type="text"
             id="mainSearch"
             placeholder="Search SKU..."
           />
+
         </div>
 
       </div>
@@ -216,6 +290,7 @@ function renderMergedTable(rows){
           <table>
 
             <thead>
+
               <tr>
                 <th>SKU</th>
                 <th>ASIN</th>
@@ -223,6 +298,7 @@ function renderMergedTable(rows){
                 <th>Unsellable</th>
                 <th>Semi Goods</th>
               </tr>
+
             </thead>
 
             <tbody id="mainBody">
@@ -278,18 +354,19 @@ function renderMergedTable(rows){
         .forEach(tr=>{
 
           tr.style.display =
-            tr.innerText.toLowerCase().includes(term)
+            tr.innerText
+              .toLowerCase()
+              .includes(term)
               ? ''
               : 'none';
         });
     });
-
 }
 
 
-// ======================================
-// REPLACE loadSheets()
-// ======================================
+// ==========================================
+// MAIN LOADER
+// ==========================================
 
 async function loadSheets(){
 
@@ -307,6 +384,10 @@ async function loadSheets(){
     const workbook =
       XLSX.read(buffer,{type:'array'});
 
+    // ======================================
+    // SHEETS
+    // ======================================
+
     const sellSheet =
       workbook.Sheets['Sellable_Inventory'];
 
@@ -316,6 +397,10 @@ async function loadSheets(){
     const semiSheet =
       workbook.Sheets['Semi Goods'];
 
+    // ======================================
+    // PARSE
+    // ======================================
+
     const sellRows =
       XLSX.utils.sheet_to_json(
         sellSheet,
@@ -323,16 +408,20 @@ async function loadSheets(){
       );
 
     const unsellRows =
-      XLSX.utils.sheet_to_json(
+      parseSheetWithHeaderRow(
         unsellSheet,
-        {defval:''}
+        2
       );
 
     const semiRows =
-      XLSX.utils.sheet_to_json(
+      parseSheetWithHeaderRow(
         semiSheet,
-        {defval:''}
+        1
       );
+
+    // ======================================
+    // MERGE
+    // ======================================
 
     const merged =
       buildMergedRows(
@@ -341,7 +430,15 @@ async function loadSheets(){
         semiRows
       );
 
+    // ======================================
+    // RENDER
+    // ======================================
+
     renderMergedTable(merged);
+
+    // ======================================
+    // KPIs
+    // ======================================
 
     document
       .getElementById('kpiSku')
@@ -385,10 +482,13 @@ async function loadSheets(){
 
   }catch(err){
 
-    tablesContainer.innerHTML =
-      '<div class="err">'+err+'</div>';
-
     console.error(err);
+
+    tablesContainer.innerHTML = `
+      <div class="err">
+${err}
+      </div>
+    `;
   }
 }
 
