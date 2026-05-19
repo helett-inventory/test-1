@@ -770,15 +770,26 @@ function mergeData(sell,unsell,fba,rpt){
   const {bySkuMap, byAsinMap} = buildInboundMap(rpt);
 
   const sh=sell.length?Object.keys(sell[0]):[];
+  dbg('Sellable_Inventory ALL headers:',sh.map((h,i)=>`[${i}]"${h}"`).join(', '));
+
+  // Reserved: try name-detection first, then fall back to column-index 3 (col D = index 3)
+  const reservedByName = detectCol(sh,['fba reserved','fbareserved','reserved','reservedqty','reserved qty','fba-reserved','fbareserve','reserve']);
+  // col D = 4th column = index 3 in the parsed header array
+  const reservedByIndex = sh.length > 3 ? sh[3] : null;
+
   const sc={
     asin:     detectCol(sh,['asin']),
     sku:      detectCol(sh,['sku','msku','sellersku','merchantsku']),
     qty:      detectCol(sh,['sellable stock','sellablestock','sellable','sellableqty','availableqty','quantity','qty','stock','units','available']),
-    reserved: detectCol(sh,['fba reserved','fbareserved','reserved','reservedqty','reserved qty','fba-reserved']),
+    reserved: reservedByName || reservedByIndex,
   };
 
-  dbg('Sellable_Inventory cols → asin:',sc.asin,'sku:',sc.sku,'qty:',sc.qty,'reserved:',sc.reserved);
-  if(!sc.reserved) dbg('WARNING: "FBA Reserved" column not found in Sellable_Inventory. Reserved will be 0. Headers:',sh.join(', '));
+  dbg('Sellable_Inventory cols → asin:',sc.asin,'sku:',sc.sku,'qty:',sc.qty,'reserved:',sc.reserved,'(by name:',reservedByName,'/ by index[3]:',reservedByIndex,')');
+  if(!sc.reserved){
+    dbg('WARNING: Reserved column not found even by index. All zeros.');
+  } else if(!reservedByName && reservedByIndex){
+    dbg('Reserved col resolved by index[3] (col D). Header text: "'+reservedByIndex+'" — verify this is correct.');
+  }
 
   const uh=unsell.length?Object.keys(unsell[0]):[];
   const uc={
@@ -1177,7 +1188,8 @@ async function boot(){
     applyFilters();
 
     const dp=$('dbg');
-    if(dbgLog.some(l=>l.includes('WARNING'))){dp.textContent='[Debug]\n'+dbgLog.join('\n');dp.style.display='block';}
+    dp.textContent='[Debug]\n'+dbgLog.join('\n');
+    dp.style.display='block';
 
     $('scr-load').style.display='none';
     $('scr-dash').style.display='block';
