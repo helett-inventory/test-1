@@ -1,360 +1,295 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Helett Inventory Dashboard</title>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
-
-:root{
-  --bg:#0f1117;
-  --bg2:#161820;
-  --bg3:#1c1f2b;
-  --card:#1e2130;
-  --card2:#242840;
-  --border:#2a2d3e;
-  --border2:#353858;
-  --text:#e8eaf6;
-  --text2:#9395a5;
-  --text3:#5f6170;
-  --accent:#6366f1;
-  --green:#22c55e;
-  --red:#ef4444;
-  --orange:#f59e0b;
-  --blue:#38bdf8;
-}
-
-*{margin:0;padding:0;box-sizing:border-box}
-
-body{
-  background:var(--bg);
-  color:var(--text);
-  font-family:'Plus Jakarta Sans',sans-serif;
-}
-
-::-webkit-scrollbar{
-  width:6px;
-  height:6px;
-}
-::-webkit-scrollbar-thumb{
-  background:var(--border2);
-  border-radius:4px;
-}
-
-.hdr{
-  height:58px;
-  background:var(--bg2);
-  border-bottom:1px solid var(--border);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 24px;
-  position:sticky;
-  top:0;
-  z-index:100;
-}
-
-.hdr-title{
-  font-weight:800;
-  font-size:15px;
-}
-
-.hdr-sub{
-  font-size:11px;
-  color:var(--text3);
-  margin-top:2px;
-  font-family:'IBM Plex Mono',monospace;
-}
-
-.sync-pill{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  padding:6px 12px;
-  border-radius:999px;
-  background:var(--bg3);
-  border:1px solid var(--border);
-  font-size:11px;
-  color:var(--text2);
-  font-family:'IBM Plex Mono',monospace;
-}
-
-.dot{
-  width:8px;
-  height:8px;
-  border-radius:50%;
-  background:var(--green);
-  animation:blink 2s infinite;
-}
-
-@keyframes blink{
-  0%,100%{opacity:1}
-  50%{opacity:.35}
-}
-
-.main{
-  max-width:1700px;
-  margin:auto;
-  padding:22px;
-}
-
-.kpi-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-  gap:14px;
-  margin-bottom:24px;
-}
-
-.kpi{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:14px;
-  padding:18px;
-}
-
-.kpi-label{
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.08em;
-  color:var(--text3);
-  margin-bottom:10px;
-  font-weight:700;
-}
-
-.kpi-value{
-  font-size:30px;
-  font-weight:800;
-}
-
-.kpi-sub{
-  margin-top:7px;
-  color:var(--text3);
-  font-size:11px;
-  font-family:'IBM Plex Mono',monospace;
-}
-
-.section{
-  margin-bottom:28px;
-}
-
-.sec-hd{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  margin-bottom:12px;
-  flex-wrap:wrap;
-  gap:10px;
-}
-
-.sec-title{
-  font-size:13px;
-  font-weight:800;
-  text-transform:uppercase;
-  color:var(--text2);
-  letter-spacing:.08em;
-}
-
-.search{
-  position:relative;
-}
-
-.search input{
-  height:34px;
-  width:220px;
-  border-radius:10px;
-  border:1px solid var(--border);
-  background:var(--bg3);
-  color:var(--text);
-  padding:0 12px;
-  outline:none;
-  font-family:'IBM Plex Mono',monospace;
-  font-size:12px;
-}
-
-.table-wrap{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:14px;
-  overflow:hidden;
-}
-
-.table-scroll{
-  overflow:auto;
-  max-height:620px;
-}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-}
-
-thead{
-  position:sticky;
-  top:0;
-  z-index:5;
-}
-
-thead tr{
-  background:var(--bg2);
-}
-
-th{
-  padding:12px;
-  text-align:left;
-  border-bottom:1px solid var(--border2);
-  color:var(--text3);
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.08em;
-  white-space:nowrap;
-}
-
-td{
-  padding:12px;
-  border-bottom:1px solid var(--border);
-  font-size:13px;
-  white-space:nowrap;
-}
-
-tbody tr:hover{
-  background:var(--card2);
-}
-
-.sku{
-  font-family:'IBM Plex Mono',monospace;
-  color:#cbd5e1;
-}
-
-.num{
-  text-align:right;
-  font-family:'IBM Plex Mono',monospace;
-}
-
-.badge{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  padding:4px 8px;
-  border-radius:999px;
-  background:rgba(34,197,94,.12);
-  border:1px solid rgba(34,197,94,.25);
-  color:#4ade80;
-  font-size:11px;
-  font-weight:700;
-}
-
-.loading{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:300px;
-  color:var(--text2);
-  font-family:'IBM Plex Mono',monospace;
-}
-
-.err{
-  background:#2b1111;
-  border:1px solid #7f1d1d;
-  color:#fca5a5;
-  padding:16px;
-  border-radius:12px;
-  margin-top:20px;
-  white-space:pre-wrap;
-  font-family:'IBM Plex Mono',monospace;
-}
-
-@media(max-width:768px){
-  .main{
-    padding:14px;
-  }
-
-  .search input{
-    width:100%;
-  }
-}
-</style>
-</head>
-
-<body>
-
-<header class="hdr">
-  <div>
-    <div class="hdr-title">Helett Inventory Dashboard</div>
-    <div class="hdr-sub" id="lastSync">Connecting...</div>
-  </div>
-
-  <div class="sync-pill">
-    <div class="dot"></div>
-    <span>LIVE SYNC</span>
-  </div>
-</header>
-
-<div class="main">
-
-  <!-- KPI -->
-  <div class="kpi-grid">
-    <div class="kpi">
-      <div class="kpi-label">Total SKUs</div>
-      <div class="kpi-value" id="kpiSku">0</div>
-      <div class="kpi-sub">Combined inventory rows</div>
-    </div>
-
-    <div class="kpi">
-      <div class="kpi-label">Sellable Qty</div>
-      <div class="kpi-value" id="kpiSell">0</div>
-      <div class="kpi-sub">Sellable inventory</div>
-    </div>
-
-    <div class="kpi">
-      <div class="kpi-label">Unsellable Qty</div>
-      <div class="kpi-value" id="kpiUnsell">0</div>
-      <div class="kpi-sub">Unsellable inventory</div>
-    </div>
-
-    <div class="kpi">
-      <div class="kpi-label">Semi Goods Qty</div>
-      <div class="kpi-value" id="kpiSemi">0</div>
-      <div class="kpi-sub">Semi goods inventory</div>
-    </div>
-  </div>
-
-  <div id="tables"></div>
-
-</div>
-
 <script>
 
-const SHEET_URL =
-'https://docs.google.com/spreadsheets/d/1jZv_Qqeg2RWXssYroxyS3_fCW_D09Nqhbf6Px9s6pR4/export?format=xlsx';
+// ======================================
+// READ ONLY LATEST DATE COLUMN
+// FOR:
+// - Unsellable
+// - Semi Goods
+// ======================================
 
-const SHEETS = [
-  'Sellable_Inventory',
-  'Unsellable',
-  'Semi Goods'
-];
+function getLatestDateColumn(headers){
 
-const tablesContainer = document.getElementById('tables');
+  const dateCols = headers.filter(h=>{
 
-function updateTime(){
-  const now = new Date();
+    const s = String(h).trim();
 
-  document.getElementById('lastSync').innerText =
-    'Last Sync • ' +
-    now.toLocaleDateString() +
-    ' • ' +
-    now.toLocaleTimeString();
+    return (
+      /\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/.test(s) ||
+      /\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}/.test(s)
+    );
+  });
+
+  return dateCols[dateCols.length - 1];
 }
 
-function toNum(v){
-  if(v === null || v === undefined || v === '') return 0;
 
-  const n = parseFloat(String(v).replace(/,/g,''));
-  return isNaN(n) ? 0 : n;
+// ======================================
+// BUILD MASTER SKU MAP
+// ======================================
+
+function buildMergedRows(
+  sellRows,
+  unsellRows,
+  semiRows
+){
+
+  const map = new Map();
+
+  // -----------------------------
+  // SELLABLE
+  // -----------------------------
+  sellRows.forEach(r=>{
+
+    const headers = Object.keys(r);
+
+    const skuCol =
+      headers.find(h=>
+        h.toLowerCase().includes('sku')
+      );
+
+    const asinCol =
+      headers.find(h=>
+        h.toLowerCase() === 'asin'
+      );
+
+    const qtyCol =
+      headers.find(h=>
+        h.toLowerCase().includes('qty') ||
+        h.toLowerCase().includes('stock') ||
+        h.toLowerCase().includes('quantity')
+      );
+
+    const sku =
+      String(r[skuCol] || '').trim();
+
+    if(!sku) return;
+
+    const asin =
+      String(r[asinCol] || '').trim();
+
+    const qty =
+      toNum(r[qtyCol]);
+
+    map.set(sku,{
+      sku,
+      asin,
+      sellable: qty,
+      unsellable: '-',
+      semi: '-'
+    });
+
+  });
+
+  // -----------------------------
+  // UNSELLABLE
+  // ONLY LATEST DATE
+  // -----------------------------
+  if(unsellRows.length){
+
+    const headers =
+      Object.keys(unsellRows[0]);
+
+    const skuCol =
+      headers.find(h=>
+        h.toLowerCase().includes('sku')
+      );
+
+    const latestCol =
+      getLatestDateColumn(headers);
+
+    unsellRows.forEach(r=>{
+
+      const sku =
+        String(r[skuCol] || '').trim();
+
+      if(!sku) return;
+
+      const qty =
+        toNum(r[latestCol]);
+
+      if(map.has(sku)){
+
+        map.get(sku).unsellable = qty;
+
+      }else{
+
+        map.set(sku,{
+          sku,
+          asin:'',
+          sellable:'-',
+          unsellable:qty,
+          semi:'-'
+        });
+      }
+
+    });
+  }
+
+  // -----------------------------
+  // SEMI GOODS
+  // ONLY LATEST DATE
+  // -----------------------------
+  if(semiRows.length){
+
+    const headers =
+      Object.keys(semiRows[0]);
+
+    const skuCol =
+      headers.find(h=>
+        h.toLowerCase().includes('sku')
+      );
+
+    const latestCol =
+      getLatestDateColumn(headers);
+
+    semiRows.forEach(r=>{
+
+      const sku =
+        String(r[skuCol] || '').trim();
+
+      if(!sku) return;
+
+      const qty =
+        toNum(r[latestCol]);
+
+      if(map.has(sku)){
+
+        map.get(sku).semi = qty;
+
+      }else{
+
+        map.set(sku,{
+          sku,
+          asin:'',
+          sellable:'-',
+          unsellable:'-',
+          semi:qty
+        });
+      }
+
+    });
+  }
+
+  return Array.from(map.values());
+
 }
+
+
+// ======================================
+// CREATE FINAL TABLE
+// ======================================
+
+function renderMergedTable(rows){
+
+  tablesContainer.innerHTML = `
+
+    <div class="section">
+
+      <div class="sec-hd">
+
+        <div style="display:flex;align-items:center;gap:10px">
+
+          <div class="sec-title">
+            Inventory Dashboard
+          </div>
+
+          <div class="badge">
+            ${rows.length} SKUs
+          </div>
+
+        </div>
+
+        <div class="search">
+          <input
+            type="text"
+            id="mainSearch"
+            placeholder="Search SKU..."
+          />
+        </div>
+
+      </div>
+
+      <div class="table-wrap">
+
+        <div class="table-scroll">
+
+          <table>
+
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>ASIN</th>
+                <th>Sellable</th>
+                <th>Unsellable</th>
+                <th>Semi Goods</th>
+              </tr>
+            </thead>
+
+            <tbody id="mainBody">
+
+              ${rows.map(r=>`
+
+                <tr>
+
+                  <td class="sku">
+                    ${r.sku}
+                  </td>
+
+                  <td class="sku">
+                    ${r.asin || '-'}
+                  </td>
+
+                  <td class="num">
+                    ${r.sellable}
+                  </td>
+
+                  <td class="num">
+                    ${r.unsellable}
+                  </td>
+
+                  <td class="num">
+                    ${r.semi}
+                  </td>
+
+                </tr>
+
+              `).join('')}
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </div>
+  `;
+
+  document
+    .getElementById('mainSearch')
+    .addEventListener('input',e=>{
+
+      const term =
+        e.target.value.toLowerCase();
+
+      document
+        .querySelectorAll('#mainBody tr')
+        .forEach(tr=>{
+
+          tr.style.display =
+            tr.innerText.toLowerCase().includes(term)
+              ? ''
+              : 'none';
+        });
+    });
+
+}
+
+
+// ======================================
+// REPLACE loadSheets()
+// ======================================
 
 async function loadSheets(){
 
@@ -363,191 +298,98 @@ async function loadSheets(){
     tablesContainer.innerHTML =
       '<div class="loading">Fetching Google Sheets...</div>';
 
-    const res = await fetch(SHEET_URL);
+    const res =
+      await fetch(SHEET_URL);
 
-    if(!res.ok){
-      throw new Error('Failed to fetch Google Sheets');
-    }
+    const buffer =
+      await res.arrayBuffer();
 
-    const buffer = await res.arrayBuffer();
+    const workbook =
+      XLSX.read(buffer,{type:'array'});
 
-    const workbook = XLSX.read(buffer,{type:'array'});
+    const sellSheet =
+      workbook.Sheets['Sellable_Inventory'];
 
-    tablesContainer.innerHTML = '';
+    const unsellSheet =
+      workbook.Sheets['Unsellable'];
 
-    let totalSku = 0;
-    let sellQty = 0;
-    let unsellQty = 0;
-    let semiQty = 0;
+    const semiSheet =
+      workbook.Sheets['Semi Goods'];
 
-    SHEETS.forEach(sheetName=>{
+    const sellRows =
+      XLSX.utils.sheet_to_json(
+        sellSheet,
+        {defval:''}
+      );
 
-      const sheet = workbook.Sheets[sheetName];
+    const unsellRows =
+      XLSX.utils.sheet_to_json(
+        unsellSheet,
+        {defval:''}
+      );
 
-      if(!sheet){
+    const semiRows =
+      XLSX.utils.sheet_to_json(
+        semiSheet,
+        {defval:''}
+      );
 
-        tablesContainer.innerHTML += `
-          <div class="err">
-Sheet not found: ${sheetName}
-          </div>
-        `;
+    const merged =
+      buildMergedRows(
+        sellRows,
+        unsellRows,
+        semiRows
+      );
 
-        return;
-      }
+    renderMergedTable(merged);
 
-      const rows = XLSX.utils.sheet_to_json(sheet,{defval:''});
+    document
+      .getElementById('kpiSku')
+      .innerText =
+      merged.length.toLocaleString();
 
-      if(!rows.length) return;
+    document
+      .getElementById('kpiSell')
+      .innerText =
+      merged.reduce((a,b)=>
+        a + (
+          typeof b.sellable === 'number'
+            ? b.sellable
+            : 0
+        ),0
+      ).toLocaleString();
 
-      totalSku += rows.length;
+    document
+      .getElementById('kpiUnsell')
+      .innerText =
+      merged.reduce((a,b)=>
+        a + (
+          typeof b.unsellable === 'number'
+            ? b.unsellable
+            : 0
+        ),0
+      ).toLocaleString();
 
-      const headers = Object.keys(rows[0]);
-
-      const qtyColumn =
-        headers.find(h=>
-          h.toLowerCase().includes('qty') ||
-          h.toLowerCase().includes('quantity') ||
-          h.toLowerCase().includes('stock')
-        );
-
-      if(qtyColumn){
-
-        const total = rows.reduce((a,b)=>a + toNum(b[qtyColumn]),0);
-
-        if(sheetName === 'Sellable_Inventory') sellQty += total;
-        if(sheetName === 'Unsellable') unsellQty += total;
-        if(sheetName === 'Semi Goods') semiQty += total;
-      }
-
-      createTable(sheetName,headers,rows);
-
-    });
-
-    document.getElementById('kpiSku').innerText =
-      totalSku.toLocaleString();
-
-    document.getElementById('kpiSell').innerText =
-      sellQty.toLocaleString();
-
-    document.getElementById('kpiUnsell').innerText =
-      unsellQty.toLocaleString();
-
-    document.getElementById('kpiSemi').innerText =
-      semiQty.toLocaleString();
+    document
+      .getElementById('kpiSemi')
+      .innerText =
+      merged.reduce((a,b)=>
+        a + (
+          typeof b.semi === 'number'
+            ? b.semi
+            : 0
+        ),0
+      ).toLocaleString();
 
     updateTime();
 
   }catch(err){
 
-    tablesContainer.innerHTML = `
-      <div class="err">
-${err}
-      </div>
-    `;
+    tablesContainer.innerHTML =
+      '<div class="err">'+err+'</div>';
 
     console.error(err);
   }
 }
 
-function createTable(sheetName,headers,rows){
-
-  const section = document.createElement('div');
-
-  section.className = 'section';
-
-  const searchId =
-    'search_' + sheetName.replace(/\s/g,'');
-
-  section.innerHTML = `
-    <div class="sec-hd">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div class="sec-title">${sheetName}</div>
-
-        <div class="badge">
-          ${rows.length} Rows
-        </div>
-      </div>
-
-      <div class="search">
-        <input
-          type="text"
-          placeholder="Search SKU..."
-          id="${searchId}"
-        />
-      </div>
-    </div>
-
-    <div class="table-wrap">
-      <div class="table-scroll">
-        <table>
-
-          <thead>
-            <tr>
-              ${headers.map(h=>`<th>${h}</th>`).join('')}
-            </tr>
-          </thead>
-
-          <tbody>
-            ${rows.map(r=>`
-              <tr>
-                ${headers.map(h=>{
-
-                  const val = r[h];
-
-                  const isNum =
-                    !isNaN(parseFloat(val)) &&
-                    isFinite(val);
-
-                  return `
-                    <td class="${
-                      h.toLowerCase().includes('sku')
-                        ? 'sku'
-                        : isNum ? 'num' : ''
-                    }">
-                      ${val}
-                    </td>
-                  `;
-
-                }).join('')}
-              </tr>
-            `).join('')}
-          </tbody>
-
-        </table>
-      </div>
-    </div>
-  `;
-
-  tablesContainer.appendChild(section);
-
-  const input = document.getElementById(searchId);
-
-  input.addEventListener('input',()=>{
-
-    const term =
-      input.value.toLowerCase();
-
-    const trs =
-      section.querySelectorAll('tbody tr');
-
-    trs.forEach(tr=>{
-
-      const txt =
-        tr.innerText.toLowerCase();
-
-      tr.style.display =
-        txt.includes(term)
-          ? ''
-          : 'none';
-    });
-  });
-}
-
-loadSheets();
-
-setInterval(loadSheets,300000);
-
 </script>
-
-</body>
-</html>
