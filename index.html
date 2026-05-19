@@ -1,15 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8" />
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0"
+/>
+
+<title>
+  Helett Inventory Dashboard
+</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --bg:#0f1117;
+  --bg2:#171923;
+  --card:#1d2030;
+  --card2:#262a40;
+  --border:#2b3045;
+  --text:#e5e7eb;
+  --text2:#9ca3af;
+  --mono:'IBM Plex Mono',monospace;
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Plus Jakarta Sans',sans-serif;
+}
+
+header{
+  height:60px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 24px;
+  border-bottom:1px solid var(--border);
+  background:var(--bg2);
+  position:sticky;
+  top:0;
+  z-index:50;
+}
+
+.title{
+  font-size:15px;
+  font-weight:800;
+}
+
+.sub{
+  font-size:11px;
+  color:var(--text2);
+  margin-top:2px;
+  font-family:var(--mono);
+}
+
+.live{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:11px;
+  color:var(--text2);
+  font-family:var(--mono);
+}
+
+.dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#22c55e;
+}
+
+.main{
+  padding:22px;
+  max-width:1700px;
+  margin:auto;
+}
+
+.kpis{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:14px;
+  margin-bottom:22px;
+}
+
+.kpi{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:18px;
+}
+
+.kpi-label{
+  font-size:11px;
+  text-transform:uppercase;
+  color:var(--text2);
+  margin-bottom:8px;
+}
+
+.kpi-value{
+  font-size:30px;
+  font-weight:800;
+}
+
+.table-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  overflow:hidden;
+}
+
+.topbar{
+  padding:16px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.search{
+  width:220px;
+  height:36px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:var(--bg2);
+  color:var(--text);
+  padding:0 12px;
+  outline:none;
+  font-family:var(--mono);
+}
+
+.table-wrap{
+  overflow:auto;
+  max-height:75vh;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+thead{
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+
+thead tr{
+  background:var(--bg2);
+}
+
+th{
+  padding:14px 12px;
+  text-align:left;
+  font-size:11px;
+  color:var(--text2);
+  border-bottom:1px solid var(--border);
+  text-transform:uppercase;
+}
+
+td{
+  padding:13px 12px;
+  border-bottom:1px solid var(--border);
+  font-size:13px;
+}
+
+tbody tr:hover{
+  background:var(--card2);
+}
+
+.sku{
+  font-family:var(--mono);
+}
+
+.num{
+  text-align:right;
+  font-family:var(--mono);
+}
+
+.loading{
+  padding:80px;
+  text-align:center;
+  color:var(--text2);
+  font-family:var(--mono);
+}
+
+.err{
+  background:#3b0d0d;
+  color:#fecaca;
+  padding:18px;
+  border-radius:12px;
+  margin-top:20px;
+  white-space:pre-wrap;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+  <div>
+
+    <div class="title">
+      Helett Inventory Dashboard
+    </div>
+
+    <div
+      class="sub"
+      id="syncText"
+    >
+      Connecting...
+    </div>
+
+  </div>
+
+  <div class="live">
+    <div class="dot"></div>
+    LIVE SYNC
+  </div>
+
+</header>
+
+<div class="main">
+
+  <div class="kpis">
+
+    <div class="kpi">
+      <div class="kpi-label">
+        Total SKUs
+      </div>
+
+      <div
+        class="kpi-value"
+        id="kpiSku"
+      >
+        0
+      </div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi-label">
+        Sellable
+      </div>
+
+      <div
+        class="kpi-value"
+        id="kpiSell"
+      >
+        0
+      </div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi-label">
+        Unsellable
+      </div>
+
+      <div
+        class="kpi-value"
+        id="kpiUnsell"
+      >
+        0
+      </div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi-label">
+        Semi Goods
+      </div>
+
+      <div
+        class="kpi-value"
+        id="kpiSemi"
+      >
+        0
+      </div>
+    </div>
+
+  </div>
+
+  <div
+    class="table-card"
+    id="tableCard"
+  >
+
+    <div class="loading">
+      Loading Google Sheets...
+    </div>
+
+  </div>
+
+</div>
+
 <script>
 
-// ==========================================
-// CUSTOM SHEET PARSING
-// ==========================================
-// Sellable_Inventory -> normal header row
-// Unsellable -> header starts at row 3
-// Semi Goods -> header starts at row 2
-// Latest date = RIGHT MOST DATE COLUMN
-// ==========================================
+const SHEET_URL =
+'https://docs.google.com/spreadsheets/d/1jZv_Qqeg2RWXssYroxyS3_fCW_D09Nqhbf6Px9s6pR4/export?format=xlsx';
 
-function parseSheetWithHeaderRow(sheet, headerRowIndex){
+function toNum(v){
+
+  if(v === '' || v === null || v === undefined)
+    return 0;
+
+  const n =
+    parseFloat(
+      String(v).replace(/,/g,'')
+    );
+
+  return isNaN(n) ? 0 : n;
+}
+
+function updateTime(){
+
+  const now = new Date();
+
+  document.getElementById('syncText').innerText =
+    'Last Sync • ' +
+    now.toLocaleDateString() +
+    ' • ' +
+    now.toLocaleTimeString();
+}
+
+function parseSheet(sheet, headerRow){
 
   const raw =
     XLSX.utils.sheet_to_json(
@@ -21,17 +351,19 @@ function parseSheetWithHeaderRow(sheet, headerRowIndex){
     );
 
   const headers =
-    raw[headerRowIndex];
+    raw[headerRow];
 
-  const rows =
-    raw.slice(headerRowIndex + 1);
+  const data =
+    raw.slice(headerRow + 1);
 
-  return rows.map(r=>{
+  return data.map(r=>{
 
     const obj = {};
 
     headers.forEach((h,i)=>{
+
       obj[String(h).trim()] = r[i];
+
     });
 
     return obj;
@@ -41,70 +373,49 @@ function parseSheetWithHeaderRow(sheet, headerRowIndex){
   );
 }
 
-
-// ==========================================
-// GET RIGHT MOST DATE COLUMN
-// ==========================================
-
 function getLatestDateColumn(headers){
 
-  const valid = headers.filter(h=>{
+  const cols = headers.filter(h=>
+    /\d/.test(String(h))
+  );
 
-    const s = String(h).trim();
-
-    return (
-      /\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/.test(s) ||
-      /\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}/.test(s)
-    );
-  });
-
-  return valid[valid.length - 1];
+  return cols[cols.length - 1];
 }
-
-
-// ==========================================
-// FIND SKU COL
-// ==========================================
 
 function findSkuCol(headers){
 
   return headers.find(h=>
-    String(h).toLowerCase().includes('sku')
+    String(h)
+    .toLowerCase()
+    .includes('sku')
   );
 }
-
-
-// ==========================================
-// FIND ASIN COL
-// ==========================================
 
 function findAsinCol(headers){
 
   return headers.find(h=>
-    String(h).toLowerCase() === 'asin'
+    String(h)
+    .toLowerCase() === 'asin'
   );
 }
-
-
-// ==========================================
-// FIND SELLABLE QTY COL
-// ==========================================
 
 function findQtyCol(headers){
 
-  return headers.find(h=>
-    String(h).toLowerCase().includes('qty') ||
-    String(h).toLowerCase().includes('quantity') ||
-    String(h).toLowerCase().includes('stock')
-  );
+  return headers.find(h=>{
+
+    const s =
+      String(h).toLowerCase();
+
+    return (
+      s.includes('qty') ||
+      s.includes('stock') ||
+      s.includes('quantity')
+    );
+
+  });
 }
 
-
-// ==========================================
-// BUILD MASTER MAP
-// ==========================================
-
-function buildMergedRows(
+function buildRows(
   sellRows,
   unsellRows,
   semiRows
@@ -112,9 +423,7 @@ function buildMergedRows(
 
   const map = new Map();
 
-  // ======================================
   // SELLABLE
-  // ======================================
 
   if(sellRows.length){
 
@@ -139,10 +448,8 @@ function buildMergedRows(
 
       map.set(sku,{
         sku,
-        asin:
-          String(r[asinCol] || '').trim(),
-        sellable:
-          toNum(r[qtyCol]),
+        asin:r[asinCol] || '',
+        sellable:toNum(r[qtyCol]),
         unsellable:'-',
         semi:'-'
       });
@@ -150,11 +457,7 @@ function buildMergedRows(
     });
   }
 
-  // ======================================
   // UNSELLABLE
-  // HEADER = ROW 3
-  // LATEST = RIGHT MOST DATE
-  // ======================================
 
   if(unsellRows.length){
 
@@ -196,11 +499,7 @@ function buildMergedRows(
     });
   }
 
-  // ======================================
   // SEMI GOODS
-  // HEADER = ROW 2
-  // LATEST = RIGHT MOST DATE
-  // ======================================
 
   if(semiRows.length){
 
@@ -246,134 +545,102 @@ function buildMergedRows(
 
 }
 
+function render(rows){
 
-// ==========================================
-// FINAL TABLE
-// ==========================================
+  document.getElementById('tableCard').innerHTML = `
 
-function renderMergedTable(rows){
+    <div class="topbar">
 
-  tablesContainer.innerHTML = `
-
-    <div class="section">
-
-      <div class="sec-hd">
-
-        <div style="display:flex;align-items:center;gap:10px">
-
-          <div class="sec-title">
-            Inventory Dashboard
-          </div>
-
-          <div class="badge">
-            ${rows.length} SKUs
-          </div>
-
-        </div>
-
-        <div class="search">
-
-          <input
-            type="text"
-            id="mainSearch"
-            placeholder="Search SKU..."
-          />
-
-        </div>
-
+      <div>
+        ${rows.length} SKUs
       </div>
 
-      <div class="table-wrap">
+      <input
+        class="search"
+        id="search"
+        placeholder="Search SKU..."
+      />
 
-        <div class="table-scroll">
+    </div>
 
-          <table>
+    <div class="table-wrap">
 
-            <thead>
+      <table>
 
-              <tr>
-                <th>SKU</th>
-                <th>ASIN</th>
-                <th>Sellable</th>
-                <th>Unsellable</th>
-                <th>Semi Goods</th>
-              </tr>
+        <thead>
 
-            </thead>
+          <tr>
+            <th>SKU</th>
+            <th>ASIN</th>
+            <th>Sellable</th>
+            <th>Unsellable</th>
+            <th>Semi Goods</th>
+          </tr>
 
-            <tbody id="mainBody">
+        </thead>
 
-              ${rows.map(r=>`
+        <tbody id="tbody">
 
-                <tr>
+          ${rows.map(r=>`
 
-                  <td class="sku">
-                    ${r.sku}
-                  </td>
+            <tr>
 
-                  <td class="sku">
-                    ${r.asin || '-'}
-                  </td>
+              <td class="sku">
+                ${r.sku}
+              </td>
 
-                  <td class="num">
-                    ${r.sellable}
-                  </td>
+              <td class="sku">
+                ${r.asin || '-'}
+              </td>
 
-                  <td class="num">
-                    ${r.unsellable}
-                  </td>
+              <td class="num">
+                ${r.sellable}
+              </td>
 
-                  <td class="num">
-                    ${r.semi}
-                  </td>
+              <td class="num">
+                ${r.unsellable}
+              </td>
 
-                </tr>
+              <td class="num">
+                ${r.semi}
+              </td>
 
-              `).join('')}
+            </tr>
 
-            </tbody>
+          `).join('')}
 
-          </table>
+        </tbody>
 
-        </div>
-
-      </div>
+      </table>
 
     </div>
   `;
 
   document
-    .getElementById('mainSearch')
+    .getElementById('search')
     .addEventListener('input',e=>{
 
       const term =
         e.target.value.toLowerCase();
 
       document
-        .querySelectorAll('#mainBody tr')
+        .querySelectorAll('#tbody tr')
         .forEach(tr=>{
 
           tr.style.display =
             tr.innerText
-              .toLowerCase()
-              .includes(term)
+            .toLowerCase()
+            .includes(term)
               ? ''
               : 'none';
+
         });
     });
 }
 
-
-// ==========================================
-// MAIN LOADER
-// ==========================================
-
 async function loadSheets(){
 
   try{
-
-    tablesContainer.innerHTML =
-      '<div class="loading">Fetching Google Sheets...</div>';
 
     const res =
       await fetch(SHEET_URL);
@@ -384,10 +651,6 @@ async function loadSheets(){
     const workbook =
       XLSX.read(buffer,{type:'array'});
 
-    // ======================================
-    // SHEETS
-    // ======================================
-
     const sellSheet =
       workbook.Sheets['Sellable_Inventory'];
 
@@ -397,10 +660,6 @@ async function loadSheets(){
     const semiSheet =
       workbook.Sheets['Semi Goods'];
 
-    // ======================================
-    // PARSE
-    // ======================================
-
     const sellRows =
       XLSX.utils.sheet_to_json(
         sellSheet,
@@ -408,37 +667,25 @@ async function loadSheets(){
       );
 
     const unsellRows =
-      parseSheetWithHeaderRow(
+      parseSheet(
         unsellSheet,
         2
       );
 
     const semiRows =
-      parseSheetWithHeaderRow(
+      parseSheet(
         semiSheet,
         1
       );
 
-    // ======================================
-    // MERGE
-    // ======================================
-
     const merged =
-      buildMergedRows(
+      buildRows(
         sellRows,
         unsellRows,
         semiRows
       );
 
-    // ======================================
-    // RENDER
-    // ======================================
-
-    renderMergedTable(merged);
-
-    // ======================================
-    // KPIs
-    // ======================================
+    render(merged);
 
     document
       .getElementById('kpiSku')
@@ -484,12 +731,23 @@ async function loadSheets(){
 
     console.error(err);
 
-    tablesContainer.innerHTML = `
+    document.getElementById('tableCard').innerHTML = `
+
       <div class="err">
-${err}
+
+        ${err}
+
       </div>
+
     `;
   }
 }
 
+loadSheets();
+
+setInterval(loadSheets,300000);
+
 </script>
+
+</body>
+</html>
