@@ -245,8 +245,8 @@ td:last-child{border-right:none;}
   <div class="kpi-grid">
     <div class="kpi ci"><div class="kpi-lbl">Total Sellable</div><div class="kpi-val" id="k0">—</div><div class="kpi-sub">FC + On Hand</div></div>
     <div class="kpi cg"><div class="kpi-lbl">FC Sellable</div><div class="kpi-val" id="k1">—</div><div class="kpi-sub">Warehouse stock</div></div>
-    <div class="kpi cb"><div class="kpi-lbl">FBA Available</div><div class="kpi-val" id="k2">—</div><div class="kpi-sub">afn-fulfillable-qty</div></div>
-    <div class="kpi cp" style="--after-color:#c4b5fd;"><div class="kpi-lbl">On Hand</div><div class="kpi-val" id="k_onhand" style="color:#c4b5fd;">—</div><div class="kpi-sub">FBA Avail + FC Transfer</div></div>
+    <div class="kpi cb"><div class="kpi-lbl">FBA Available</div><div class="kpi-val" id="k2">—</div><div class="kpi-sub">Amz_fulfilled_inv sellable</div></div>
+    <div class="kpi cp" style="--after-color:#c4b5fd;"><div class="kpi-lbl">On Hand</div><div class="kpi-val" id="k_onhand" style="color:#c4b5fd;">—</div><div class="kpi-sub">Amz_fulfilled_inv sellable</div></div>
     <div class="kpi ct"><div class="kpi-lbl">FC Transfer</div><div class="kpi-val" id="k_fct" style="color:#5eead4;">—</div><div class="kpi-sub">Reserved FC-transfers</div></div>
     <div class="kpi cp"><div class="kpi-lbl">Total Unsellable</div><div class="kpi-val" id="k3">—</div><div class="kpi-sub">FC + FBA unsellable</div></div>
     <div class="kpi co"><div class="kpi-lbl">Low Stock SKUs</div><div class="kpi-val" id="k4">—</div><div class="kpi-sub">Total sellable &lt; 50</div></div>
@@ -961,9 +961,9 @@ function mergeData(sell, unMap, amzFul, manage, rsv, fbaInv){
 
   // ── Build FBA maps ──
   const {fbaAvailMap, fbaUnsellMap, fbaSkuMap} = buildAmzFulMaps(amzFul);
-  const afnMap = buildManageMap(manage);
   const fctMap = buildReservedMap(rsv);
   const ibMap  = buildInboundMap(fbaInv);
+  // Manage_FBA_inv (afn-fulfillable-quantity) no longer used — On Hand = Amz_fulfilled_inv SELLABLE
 
   // ── FC sell map ──
   const sh = sell.length ? Object.keys(sell[0]) : [];
@@ -994,12 +994,11 @@ function mergeData(sell, unMap, amzFul, manage, rsv, fbaInv){
   for(const asin of fbaSet){
     if(ASIN_BLOCKLIST.has(asin)) continue;
     const sku        = resolveSkuName(asin, fbaSkuMap.get(asin)||'--');
-    const fbaAvail   = fbaAvailMap.get(asin)  || 0;   // raw FBA sellable (display only)
+    const fbaAvail   = fbaAvailMap.get(asin)  || 0;   // SELLABLE from Amz_fulfilled_inv
     const fbaUnsell  = fbaUnsellMap.get(asin) || 0;
-    const afnFulfil  = afnMap.get(asin)       || 0;   // afn-fulfillable-quantity
-    const fcTransfer = fctMap.get(asin)        || 0;   // reserved_fc-transfers
+    const fcTransfer = fctMap.get(asin)        || 0;   // reserved_fc-transfers (display only)
     const inbound    = ibMap.get(asin)          || 0;   // inbound-quantity
-    const onHand     = afnFulfil + fcTransfer;         // On Hand = afn-fulfillable + fc-transfer
+    const onHand     = fbaAvail;                        // On Hand = Amz_fulfilled_inv SELLABLE qty
     const hasFCMatch = sellMap.has(asin) || unMap.has(asin);
     const fcSell     = sellMap.get(asin) ?? 0;
     const fcUnsell   = unMap.get(asin)   ?? 0;
@@ -1033,8 +1032,7 @@ function mergeData(sell, unMap, amzFul, manage, rsv, fbaInv){
     const sku       = resolveSkuName(asin, sellSku.get(asin)||'--');
     const fcTransfer= fctMap.get(asin)  || 0;
     const inbound   = ibMap.get(asin)   || 0;
-    const afnFulfil = afnMap.get(asin)  || 0;
-    const onHand    = afnFulfil + fcTransfer;
+    const onHand    = fbaAvailMap.get(asin) || 0;  // On Hand = Amz_fulfilled_inv SELLABLE qty
     const total     = fcSell + onHand;
     const unit_cost = COST_MAP[asin] || 0;
     const total_cost= unit_cost * total;
