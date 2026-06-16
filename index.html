@@ -341,6 +341,7 @@ td:last-child{border-right:none;}
             <th class="nc compact" onclick="sortBy('fc_unsellable')"><div class="thi">FC Unsell<span class="sarr" data-col="fc_unsellable">↕</span></div></th>
             <th class="nc compact" onclick="sortBy('fba_available')"><div class="thi">FBA Avail<span class="sarr" data-col="fba_available">↕</span></div></th>
             <th class="nc compact" onclick="sortBy('fba_unsellable')"><div class="thi">FBA Unsell<span class="sarr" data-col="fba_unsellable">↕</span></div></th>
+            <th class="nc compact" onclick="sortBy('inbound')"><div class="thi">Inbound<span class="sarr" data-col="inbound">↕</span></div></th>
             <th class="nc compact" onclick="sortBy('fc_transfer')"><div class="thi">FC Transfer<span class="sarr" data-col="fc_transfer">↕</span></div></th>
             <th class="nc compact" onclick="sortBy('on_hand')"><div class="thi">On Hand<span class="sarr" data-col="on_hand">↕</span></div></th>
             <th class="nc compact" onclick="sortBy('total')"><div class="thi">Total<span class="sarr" data-col="total">↕</span></div></th>
@@ -378,6 +379,7 @@ const SH_UN   = "Unsellable";
 const SH_AMZ_FUL  = "Amz_fulfilled_inv";   // SELLABLE/UNSELLABLE condition rows
 const SH_MANAGE   = "Manage_FBA_inv";       // afn-fulfillable-quantity
 const SH_RESERVED = "Reserved_inv";         // reserved_fc-transfers
+const SH_FBA_INV  = "FBA_Inv";             // inbound-quantity
 
 // ══════════════════════════════════════════
 // ASIN BLOCKLIST
@@ -639,6 +641,7 @@ function downloadExcel(){
       'FC Unsellable':    r.fc_unsellable,
       'FBA Available':    r.fba_available,
       'FBA Unsellable':   r.fba_unsellable,
+      'Inbound':          r.inbound,
       'FC Transfer':      r.fc_transfer,
       'On Hand':          r.on_hand,
       'Total Sellable':   r.total,
@@ -778,6 +781,7 @@ function parseSheets(abFba, abFc){
   const aN   = findSheet(wbFba, SH_AMZ_FUL);
   const mN   = findSheet(wbFba, SH_MANAGE);
   const rsvN = findSheet(wbFba, SH_RESERVED);
+  const ibN  = findSheet(wbFba, SH_FBA_INV);
 
   if(!aN)   throw new Error(`Sheet "${SH_AMZ_FUL}" not found in FBA workbook. Available: ${wbFba.SheetNames.join(', ')}`);
   if(!mN)   throw new Error(`Sheet "${SH_MANAGE}" not found in FBA workbook. Available: ${wbFba.SheetNames.join(', ')}`);
@@ -786,6 +790,8 @@ function parseSheets(abFba, abFc){
   const amzFul = sheetToRows(wbFba.Sheets[aN]);
   const manage = sheetToRows(wbFba.Sheets[mN]);
   const rsv    = sheetToRows(wbFba.Sheets[rsvN]);
+  const fbaInv = ibN ? sheetToRows(wbFba.Sheets[ibN]) : [];
+  if(!ibN) dbg('WARNING: Sheet "FBA_Inv" not found — inbound will be 0');
 
   // FC workbook
   const wbFc = XLSX.read(abFc, {type:'array', cellDates:true});
@@ -802,9 +808,9 @@ function parseSheets(abFba, abFc){
   const unMap = parseUnsellable(wbFc.Sheets[uN]);
 
   dbg('Rows → amz_ful:', amzFul.length, '| manage:', manage.length, '| reserved:', rsv.length,
-      '| sell:', sell.length, '| unsell map:', unMap.size);
+      '| fba_inv:', fbaInv.length, '| sell:', sell.length, '| unsell map:', unMap.size);
 
-  return { sell, unMap, amzFul, manage, rsv };
+  return { sell, unMap, amzFul, manage, rsv, fbaInv };
 }
 
 // ══════════════════════════════════════════
@@ -920,16 +926,44 @@ function buildReservedMap(rsv){
   return fctMap;
 }
 
+// FBA_Inv → inboundMap (inbound-quantity) keyed by ASIN
+function buildInboundMap(fbaInv){
+  const ibMap = new Map();
+  if(!fbaInv.length){ dbg('FBA_Inv: empty'); return ibMap; }
+
+  const h = Object.keys(fbaInv[0]);
+  const asinCol = detectCol(h, ['asin']);
+  const ibCol   = detectCol(h, ['inbound-quantity','inboundquantity','inbound quantity','inbound']);
+
+  dbg('FBA_Inv cols → asin:', asinCol, 'inbound-quantity:', ibCol);
+
+  if(!asinCol || !ibCol){
+    dbg('WARNING: missing cols in FBA_Inv. Headers:', h.join(', '));
+    return ibMap;
+  }
+
+  for(const row of fbaInv){
+    const asin = norm(row[asinCol]);
+    if(!asin || asin === 'ASIN' || ASIN_BLOCKLIST.has(asin)) continue;
+    const qty = toNum(row[ibCol]);
+    if(qty) ibMap.set(asin, (ibMap.get(asin)||0) + qty);
+  }
+
+  dbg('Inbound map entries:', ibMap.size);
+  return ibMap;
+}
+
 // ══════════════════════════════════════════
 // MERGE
 // ══════════════════════════════════════════
-function mergeData(sell, unMap, amzFul, manage, rsv){
+function mergeData(sell, unMap, amzFul, manage, rsv, fbaInv){
   step('Merging by ASIN…');
 
   // ── Build FBA maps ──
   const {fbaAvailMap, fbaUnsellMap, fbaSkuMap} = buildAmzFulMaps(amzFul);
   const afnMap = buildManageMap(manage);
   const fctMap = buildReservedMap(rsv);
+  const ibMap  = buildInboundMap(fbaInv);
 
   // ── FC sell map ──
   const sh = sell.length ? Object.keys(sell[0]) : [];
@@ -964,6 +998,7 @@ function mergeData(sell, unMap, amzFul, manage, rsv){
     const fbaUnsell  = fbaUnsellMap.get(asin) || 0;
     const afnFulfil  = afnMap.get(asin)       || 0;   // afn-fulfillable-quantity
     const fcTransfer = fctMap.get(asin)        || 0;   // reserved_fc-transfers
+    const inbound    = ibMap.get(asin)          || 0;   // inbound-quantity
     const onHand     = afnFulfil + fcTransfer;         // On Hand = afn-fulfillable + fc-transfer
     const hasFCMatch = sellMap.has(asin) || unMap.has(asin);
     const fcSell     = sellMap.get(asin) ?? 0;
@@ -978,6 +1013,7 @@ function mergeData(sell, unMap, amzFul, manage, rsv){
       fc_unsellable:hasFCMatch ? fcUnsell : 0,
       fba_available: fbaAvail,   // raw afn sellable — display col
       fba_unsellable:fbaUnsell,
+      inbound,
       fc_transfer:  fcTransfer,
       on_hand:      onHand,
       total,
@@ -996,6 +1032,7 @@ function mergeData(sell, unMap, amzFul, manage, rsv){
     const fcUnsell  = unMap.get(asin)   ?? 0;
     const sku       = resolveSkuName(asin, sellSku.get(asin)||'--');
     const fcTransfer= fctMap.get(asin)  || 0;
+    const inbound   = ibMap.get(asin)   || 0;
     const afnFulfil = afnMap.get(asin)  || 0;
     const onHand    = afnFulfil + fcTransfer;
     const total     = fcSell + onHand;
@@ -1008,6 +1045,7 @@ function mergeData(sell, unMap, amzFul, manage, rsv){
       fc_unsellable:fcUnsell,
       fba_available:0,
       fba_unsellable:0,
+      inbound,
       fc_transfer:  fcTransfer,
       on_hand:      onHand,
       total,
@@ -1196,6 +1234,7 @@ function renderTable(rows){
     const unitCostHtml  = r.unit_cost  > 0 ? `<td class="td-cost compact">${fmtCurFull(r.unit_cost)}</td>`  : `<td class="td-cost z compact">—</td>`;
     const totalCostHtml = r.total_cost > 0 ? `<td class="td-cost">${fmtCurFull(r.total_cost)}</td>` : `<td class="td-cost z">—</td>`;
     const fctClass  = r.fc_transfer > 0 ? 'n fct compact' : 'n fct z compact';
+    const ibClass   = r.inbound     > 0 ? 'n ib compact'  : 'n ib z compact';
     const onhClass  = r.on_hand     > 0 ? 'n onh compact' : 'n onh z compact';
     return `<tr>
       <td class="td-sku" title="${esc(r.sku)}">${esc(r.sku)}</td>
@@ -1204,6 +1243,7 @@ function renderTable(rows){
       <td class="n compact ${r.fc_unsellable>0?'w':'z'}">${r.fc_unsellable.toLocaleString()}</td>
       <td class="n compact ${r.fba_available>0?'g':'z'}">${r.fba_available.toLocaleString()}</td>
       <td class="n compact ${r.fba_unsellable>0?'w':'z'}">${r.fba_unsellable.toLocaleString()}</td>
+      <td class="${ibClass}">${r.inbound > 0 ? r.inbound.toLocaleString() : '—'}</td>
       <td class="${fctClass}">${r.fc_transfer > 0 ? r.fc_transfer.toLocaleString() : '—'}</td>
       <td class="${onhClass}">${r.on_hand > 0 ? r.on_hand.toLocaleString() : '—'}</td>
       <td class="${tc} compact">${r.total.toLocaleString()}</td>
@@ -1283,8 +1323,8 @@ async function boot(){
   const t0 = performance.now();
   try{
     const {abFba, abFc} = await fetchBoth();
-    const {sell, unMap, amzFul, manage, rsv} = parseSheets(abFba, abFc);
-    allRows = mergeData(sell, unMap, amzFul, manage, rsv);
+    const {sell, unMap, amzFul, manage, rsv, fbaInv} = parseSheets(abFba, abFc);
+    allRows = mergeData(sell, unMap, amzFul, manage, rsv, fbaInv);
     filteredRows = [...allRows];
     renderKPIs(allRows);
     renderCharts(allRows);
@@ -1311,7 +1351,7 @@ async function boot(){
 
 boot();
 
-setInterval(() => { location.reload(); }, 180000);
+setInterval(() => { location.reload(); }, 1800000);
 </script>
 
 <footer style="text-align:center;padding:18px 0 22px;font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:#3a3d50;letter-spacing:0.06em;">
