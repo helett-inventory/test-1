@@ -365,14 +365,16 @@ td:last-child{border-right:none;}
 // ══════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════
-// New workbook — contains Sellable_Inventory, Unsellable (FC data) + Amz_fulfilled_inv, Manage_FBA_inv, Reserved_inv
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/1Va-jdWfO2dmO6R-QCnkg9S2YqIWacx9pKfkW3Th-RGw/export?format=xlsx";
+// FBA workbook — Amz_fulfilled_inv, Manage_FBA_inv, Reserved_inv
+const SHEET_URL    = "https://docs.google.com/spreadsheets/d/1Va-jdWfO2dmO6R-QCnkg9S2YqIWacx9pKfkW3Th-RGw/export?format=xlsx";
+// FC workbook  — Sellable_Inventory, Unsellable
+const FC_SHEET_URL = "https://docs.google.com/spreadsheets/d/1jZv_Qqeg2RWXssYroxyS3_fCW_D09Nqhbf6Px9s6pR4/export?format=xlsx";
 
-// FC sheets (unchanged logic)
+// FC sheets
 const SH_SELL = "Sellable_Inventory";
 const SH_UN   = "Unsellable";
 
-// New FBA sheets
+// FBA sheets
 const SH_AMZ_FUL  = "Amz_fulfilled_inv";   // SELLABLE/UNSELLABLE condition rows
 const SH_MANAGE   = "Manage_FBA_inv";       // afn-fulfillable-quantity
 const SH_RESERVED = "Reserved_inv";         // reserved_fc-transfers
@@ -654,15 +656,19 @@ function downloadExcel(){
 }
 
 // ══════════════════════════════════════════
-// FETCH
+// FETCH — parallel
 // ══════════════════════════════════════════
-async function fetchData(){
-  step('Fetching spreadsheet…');
-  const r = await fetch(SHEET_URL);
-  if(!r.ok) throw new Error(`HTTP ${r.status} ${r.statusText}`);
-  const ab = await r.arrayBuffer();
-  dbg('Bytes:', ab.byteLength);
-  return ab;
+async function fetchBoth(){
+  step('Fetching spreadsheets (parallel)…');
+  const [rFba, rFc] = await Promise.all([
+    fetch(SHEET_URL),
+    fetch(FC_SHEET_URL)
+  ]);
+  if(!rFba.ok) throw new Error(`FBA sheet HTTP ${rFba.status} ${rFba.statusText}`);
+  if(!rFc.ok)  throw new Error(`FC sheet HTTP ${rFc.status} ${rFc.statusText}`);
+  const [abFba, abFc] = await Promise.all([rFba.arrayBuffer(), rFc.arrayBuffer()]);
+  dbg('FBA bytes:', abFba.byteLength, '| FC bytes:', abFc.byteLength);
+  return {abFba, abFc};
 }
 
 // ══════════════════════════════════════════
@@ -692,34 +698,113 @@ function sheetToRows(ws){
   return rows.filter(row => Object.values(row).some(v=>v!==''));
 }
 
-function parseSheets(ab){
+// Unsellable sheet: wide format with date cols starting after ASIN col.
+// Row 1 = summary (JUNE / total etc), Row 2 = header (SKU | COST | TOTAL COST | ASIN | date…)
+// Strategy: find header row (has 'SKU' in col A), then scan rightmost col that has a date-like
+// header and at least one non-zero value → that is the latest date column.
+function parseUnsellable(ws){
+  if(!ws||!ws['!ref']) return new Map();
+  const range = XLSX.utils.decode_range(ws['!ref']);
+
+  // Find header row — look for row where col A cell = 'SKU'
+  let hRow = -1;
+  for(let r=range.s.r; r<=Math.min(range.s.r+10, range.e.r); r++){
+    const cell = ws[XLSX.utils.encode_cell({r, c:range.s.c})];
+    if(cell && String(cell.v||'').trim().toUpperCase() === 'SKU'){ hRow=r; break; }
+  }
+  if(hRow === -1){ dbg('Unsellable: header row not found'); return new Map(); }
+
+  // Read header row to identify columns
+  const headers = [];
+  for(let c=range.s.c; c<=range.e.c; c++){
+    const cell = ws[XLSX.utils.encode_cell({r:hRow, c})];
+    headers.push({c, v: cell ? String(cell.v||'').trim() : ''});
+  }
+
+  // Find ASIN col
+  const asinHdr = headers.find(h => h.v.toUpperCase() === 'ASIN');
+  if(!asinHdr){ dbg('Unsellable: ASIN col not found'); return new Map(); }
+
+  // Date cols = all headers after ASIN col that look like dates (contain '-' or '/')
+  // or are non-empty after the ASIN position
+  const asinColIdx = asinHdr.c;
+  const dateCols = headers.filter(h => h.c > asinColIdx && h.v !== '');
+
+  dbg('Unsellable: hRow=', hRow, '| asinCol=', asinColIdx, '| dateCols count=', dateCols.length);
+
+  if(!dateCols.length){ dbg('Unsellable: no date cols found'); return new Map(); }
+
+  // Find rightmost date col that has at least one non-zero numeric value in data rows
+  let latestCol = null;
+  for(let i = dateCols.length - 1; i >= 0; i--){
+    const c = dateCols[i].c;
+    let hasData = false;
+    for(let r=hRow+1; r<=range.e.r; r++){
+      const cell = ws[XLSX.utils.encode_cell({r, c})];
+      if(cell && cell.v !== '' && cell.v !== null && parseFloat(cell.v) > 0){ hasData=true; break; }
+    }
+    if(hasData){ latestCol = c; dbg('Unsellable: latest col idx=', c, 'header=', dateCols[i].v); break; }
+  }
+
+  if(latestCol === null){
+    // All zeros — still use rightmost col
+    latestCol = dateCols[dateCols.length-1].c;
+    dbg('Unsellable: all-zero cols, using rightmost=', latestCol);
+  }
+
+  // Build ASIN → qty map from latest date col
+  const unMap = new Map();
+  for(let r=hRow+1; r<=range.e.r; r++){
+    const asinCell = ws[XLSX.utils.encode_cell({r, c:asinColIdx})];
+    if(!asinCell || !asinCell.v) continue;
+    const asin = String(asinCell.v).trim().toUpperCase();
+    if(!asin || asin === 'ASIN' || ASIN_BLOCKLIST.has(asin)) continue;
+    const qtyCell = ws[XLSX.utils.encode_cell({r, c:latestCol})];
+    const qty = qtyCell ? toNum(qtyCell.v) : 0;
+    if(qty) unMap.set(asin, (unMap.get(asin)||0) + qty);
+  }
+
+  dbg('Unsellable map entries:', unMap.size);
+  return unMap;
+}
+
+function parseSheets(abFba, abFc){
   step('Parsing…');
-  const wb = XLSX.read(ab,{type:'array',cellDates:true});
-  dbg('Sheets:', wb.SheetNames.join(', '));
 
-  const sN   = findSheet(wb, SH_SELL);
-  const uN   = findSheet(wb, SH_UN);
-  const aN   = findSheet(wb, SH_AMZ_FUL);
-  const mN   = findSheet(wb, SH_MANAGE);
-  const rsvN = findSheet(wb, SH_RESERVED);
+  // FBA workbook
+  const wbFba = XLSX.read(abFba, {type:'array', cellDates:true});
+  dbg('FBA sheets:', wbFba.SheetNames.join(', '));
 
-  if(!aN)   throw new Error(`Sheet "${SH_AMZ_FUL}" not found. Available: ${wb.SheetNames.join(', ')}`);
-  if(!mN)   throw new Error(`Sheet "${SH_MANAGE}" not found. Available: ${wb.SheetNames.join(', ')}`);
-  if(!rsvN) throw new Error(`Sheet "${SH_RESERVED}" not found. Available: ${wb.SheetNames.join(', ')}`);
+  const aN   = findSheet(wbFba, SH_AMZ_FUL);
+  const mN   = findSheet(wbFba, SH_MANAGE);
+  const rsvN = findSheet(wbFba, SH_RESERVED);
 
-  dbg('Sheet map → FC-sell:', (sN||'NOT FOUND'), '| FC-unsell:', (uN||'NOT FOUND'),
-      '| amz_ful:', aN, '| manage:', mN, '| reserved:', rsvN);
+  if(!aN)   throw new Error(`Sheet "${SH_AMZ_FUL}" not found in FBA workbook. Available: ${wbFba.SheetNames.join(', ')}`);
+  if(!mN)   throw new Error(`Sheet "${SH_MANAGE}" not found in FBA workbook. Available: ${wbFba.SheetNames.join(', ')}`);
+  if(!rsvN) throw new Error(`Sheet "${SH_RESERVED}" not found in FBA workbook. Available: ${wbFba.SheetNames.join(', ')}`);
 
-  const sell   = sN   ? sheetToRows(wb.Sheets[sN])   : [];
-  const unsell = uN   ? sheetToRows(wb.Sheets[uN])   : [];
-  const amzFul = sheetToRows(wb.Sheets[aN]);
-  const manage = sheetToRows(wb.Sheets[mN]);
-  const rsv    = sheetToRows(wb.Sheets[rsvN]);
+  const amzFul = sheetToRows(wbFba.Sheets[aN]);
+  const manage = sheetToRows(wbFba.Sheets[mN]);
+  const rsv    = sheetToRows(wbFba.Sheets[rsvN]);
 
-  dbg('Rows → sell:', sell.length, 'unsell:', unsell.length,
-      'amz_ful:', amzFul.length, 'manage:', manage.length, 'reserved:', rsv.length);
+  // FC workbook
+  const wbFc = XLSX.read(abFc, {type:'array', cellDates:true});
+  dbg('FC sheets:', wbFc.SheetNames.join(', '));
 
-  return { sell, unsell, amzFul, manage, rsv };
+  const sN = findSheet(wbFc, SH_SELL);
+  const uN = findSheet(wbFc, SH_UN);
+
+  if(!sN) throw new Error(`Sheet "${SH_SELL}" not found in FC workbook. Available: ${wbFc.SheetNames.join(', ')}`);
+  if(!uN) throw new Error(`Sheet "${SH_UN}" not found in FC workbook. Available: ${wbFc.SheetNames.join(', ')}`);
+
+  const sell  = sheetToRows(wbFc.Sheets[sN]);
+  // Unsellable uses custom parser for rightmost date col
+  const unMap = parseUnsellable(wbFc.Sheets[uN]);
+
+  dbg('Rows → amz_ful:', amzFul.length, '| manage:', manage.length, '| reserved:', rsv.length,
+      '| sell:', sell.length, '| unsell map:', unMap.size);
+
+  return { sell, unMap, amzFul, manage, rsv };
 }
 
 // ══════════════════════════════════════════
@@ -838,30 +923,21 @@ function buildReservedMap(rsv){
 // ══════════════════════════════════════════
 // MERGE
 // ══════════════════════════════════════════
-function mergeData(sell, unsell, amzFul, manage, rsv){
+function mergeData(sell, unMap, amzFul, manage, rsv){
   step('Merging by ASIN…');
 
-  // ── Build new FBA maps ──
+  // ── Build FBA maps ──
   const {fbaAvailMap, fbaUnsellMap, fbaSkuMap} = buildAmzFulMaps(amzFul);
   const afnMap = buildManageMap(manage);
   const fctMap = buildReservedMap(rsv);
 
-  // ── FC maps (unchanged logic) ──
+  // ── FC sell map ──
   const sh = sell.length ? Object.keys(sell[0]) : [];
   const sc = {
     asin: detectCol(sh, ['asin']),
     sku:  detectCol(sh, ['sku','msku','sellersku','merchantsku']),
     qty:  detectCol(sh, ['sellable stock','sellablestock','sellable','sellableqty','availableqty','quantity','qty','stock','units','available']),
   };
-
-  const uh = unsell.length ? Object.keys(unsell[0]) : [];
-  const uc = {
-    asin: detectCol(uh, ['asin']),
-    sku:  detectCol(uh, ['sku','msku','sellersku']),
-  };
-  const skipU   = new Set([uc.asin, uc.sku].filter(Boolean));
-  const dateCols = uh.filter(h => !skipU.has(h) && h !== '');
-  const lastDC  = dateCols.length ? dateCols[dateCols.length-1] : null;
 
   const sellMap = new Map(), sellSku = new Map();
   if(sc.asin && sc.qty){
@@ -874,14 +950,7 @@ function mergeData(sell, unsell, amzFul, manage, rsv){
     }
   }
 
-  const unMap = new Map();
-  if(uc.asin && lastDC){
-    for(const row of unsell){
-      const asin = norm(row[uc.asin]);
-      if(!asin || asin==='-' || asin==='ASIN' || ASIN_BLOCKLIST.has(asin)) continue;
-      unMap.set(asin, (unMap.get(asin)||0) + toNum(row[lastDC]));
-    }
-  }
+  // unMap already built by parseUnsellable (rightmost date col)
 
   const merged = [];
 
@@ -1213,9 +1282,9 @@ function sortBy(col){
 async function boot(){
   const t0 = performance.now();
   try{
-    const ab = await fetchData();
-    const {sell, unsell, amzFul, manage, rsv} = parseSheets(ab);
-    allRows = mergeData(sell, unsell, amzFul, manage, rsv);
+    const {abFba, abFc} = await fetchBoth();
+    const {sell, unMap, amzFul, manage, rsv} = parseSheets(abFba, abFc);
+    allRows = mergeData(sell, unMap, amzFul, manage, rsv);
     filteredRows = [...allRows];
     renderKPIs(allRows);
     renderCharts(allRows);
@@ -1234,7 +1303,7 @@ async function boot(){
   }catch(err){
     $('scr-load').style.display = 'none';
     $('scr-err').style.display  = 'block';
-    $('errbody').textContent = err.message+'\n\n[Debug Log]\n'+dbgLog.join('\n')+'\n\nNote: Sheet must be shared as "Anyone with the link can view".';
+    $('errbody').textContent = err.message+'\n\n[Debug Log]\n'+dbgLog.join('\n')+'\n\nNote: Both sheets must be shared as "Anyone with the link can view".';
     set('slbl','Error');
     $('sdot').className = 'sdot err';
   }
