@@ -228,7 +228,7 @@ td:last-child{border-right:none;}
 
 <div id="scr-load">
   <div class="spinner"></div>
-  <div><div class="load-msg">Fetching Google Sheets…</div><div class="load-step" id="lstep">Initialising</div></div>
+  <div><div class="load-msg">Loading…</div><div class="load-step" id="lstep">Initialising</div></div>
 </div>
 
 <div id="scr-err" class="main">
@@ -899,19 +899,19 @@ function buildManageMap(manage){
   return afnMap;
 }
 
-// Reserved_inv → fcTransferMap (reserved_fc-transfers)
+// FBA_Inv → fcTransferMap (fc-transfer)
 function buildReservedMap(rsv){
   const fctMap = new Map();
-  if(!rsv.length){ dbg('Reserved_inv: empty'); return fctMap; }
+  if(!rsv.length){ dbg('FBA_Inv (fc-transfer): empty'); return fctMap; }
 
   const h = Object.keys(rsv[0]);
   const asinCol = detectCol(h, ['asin']);
-  const fctCol  = detectCol(h, ['reserved_fc-transfers','reservedfctransfers','fc-transfers','fctransfers','fc transfers']);
+  const fctCol  = detectCol(h, ['fc-transfer','fctransfer','fc transfer']);
 
-  dbg('Reserved_inv cols → asin:', asinCol, 'fc-transfers:', fctCol);
+  dbg('FBA_Inv cols → asin:', asinCol, 'fc-transfer:', fctCol);
 
   if(!asinCol || !fctCol){
-    dbg('WARNING: missing cols in Reserved_inv. Headers:', h.join(', '));
+    dbg('WARNING: missing cols in FBA_Inv for fc-transfer. Headers:', h.join(', '));
     return fctMap;
   }
 
@@ -961,7 +961,7 @@ function mergeData(sell, unMap, amzFul, manage, rsv, fbaInv){
 
   // ── Build FBA maps ──
   const {fbaAvailMap, fbaUnsellMap, fbaSkuMap} = buildAmzFulMaps(amzFul);
-  const fctMap = buildReservedMap(rsv);
+  const fctMap = buildReservedMap(fbaInv);
   const ibMap  = buildInboundMap(fbaInv);
   // Manage_FBA_inv (afn-fulfillable-quantity) no longer used — On Hand = Amz_fulfilled_inv SELLABLE
 
