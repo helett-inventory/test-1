@@ -245,7 +245,7 @@ td:last-child{border-right:none;}
   <div class="kpi-grid">
     <div class="kpi ci"><div class="kpi-lbl">Total Sellable</div><div class="kpi-val" id="k0">—</div><div class="kpi-sub">FC + On Hand</div></div>
     <div class="kpi cg"><div class="kpi-lbl">FC Sellable</div><div class="kpi-val" id="k1">—</div><div class="kpi-sub">Warehouse stock</div></div>
-    <div class="kpi cb"><div class="kpi-lbl">FBA Available</div><div class="kpi-val" id="k2">—</div><div class="kpi-sub">Amz_fulfilled_inv sellable</div></div>
+    <div class="kpi cb"><div class="kpi-lbl">FBA Available</div><div class="kpi-val" id="k2">—</div><div class="kpi-sub">FBA_Inv available (+ Amz fallback)</div></div>
     <div class="kpi cp" style="--after-color:#c4b5fd;"><div class="kpi-lbl">On Hand</div><div class="kpi-val" id="k_onhand" style="color:#c4b5fd;">—</div><div class="kpi-sub">FBA Avail + FC Transfer</div></div>
     <div class="kpi ct"><div class="kpi-lbl">FC Transfer</div><div class="kpi-val" id="k_fct" style="color:#5eead4;">—</div><div class="kpi-sub">Reserved FC-transfers</div></div>
     <div class="kpi cp"><div class="kpi-lbl">Total Unsellable</div><div class="kpi-val" id="k3">—</div><div class="kpi-sub">FC + FBA unsellable</div></div>
@@ -385,7 +385,7 @@ const SH_FBA_INV  = "FBA_Inv";             // inbound-quantity
 // ASIN BLOCKLIST
 // ══════════════════════════════════════════
 const ASIN_BLOCKLIST = new Set([
-  "B0CN1153M4","B0F5Q4RV2R","B0BRXX6HMR","B0BYZVNPL4","B0C9CVWLL3",
+  "B0CN1153M4","B0BRXX6HMR","B0BYZVNPL4","B0C9CVWLL3",
   "B0D4F7Y3NZ","B0CN11FZW5","B0888WZ411","B0C8TW9ZR6","B0CL4GVKSN",
   "B0BFRS5BLT","B0CB1DDNV7","B01G46PYPO","B0BZ8HF4WL","B07TW7QMBN",
   "B07TD94GPJ","B0CLYLNCZD","B0CFHRLWM2","B0B5VQYGW6","B0CQ24C7DX",
@@ -397,13 +397,13 @@ const ASIN_BLOCKLIST = new Set([
   "B0DD6WNP26","B08LQ1G624","B0DPJ8BWCG","B0CNLW386T",
   "B013JYPTA4","B0BRKVYG8X","B07TB4DZTK","B0DJK3GNCY","B01DYJ8R4O",
   "B0D9KKFVT6","B0BL3LJHRB","B08FC23JD7","B07T2VZMSG","B0D9KJJ7WF",
-  "B07FDG8GQT","B01H35Y352","B07MK547MK","B0C3HZDJ5C","B0FL2VFCT9",
+  "B07FDG8GQT","B01H35Y352","B07MK547MK","B0C3HZDJ5C",
   "B0C96F68YL","B0BRXVQ85M","B0FZSCW83R","B0BD9191XX","B0DQGSMG4N",
   "B091TCSG4D","B07T85LWH7","B09TY1SZP6","B0DTQ3ZCBH","B0DRL8ZDWX",
   "B086ZFW6HD","B0BJMLX4RR","B0CQTK12SW","B09K4M1JSN","B09TWLRXZ3",
   "B07Q5PC3SV","B0F6MXY655","B0BRN9ZGL1","B0CC8ZFPRX","B0DD7RS56N",
   "B0CB8X5RCN","B0C8NNB48Z","B08PSLZYZV","B0FGTMFZFM","B0DGCG6MN4",
-  "B0CR7JGRYJ","B0FHQSL9DH","B0CMMMJ5WY"
+  "B0CR7JGRYJ","B0FHQSL9DH","B0CMMMJ5WY",
 ]);
 
 // ══════════════════════════════════════════
@@ -459,15 +459,15 @@ const COST_MAP = {
   "B0DXC17SSS": 122.0,
   "B0DTNVQ34H": 92.83,
   "B0D9T8R3W8": 132.64,
-  "B0D4F12NJT": 1.0
+  "B0D4F12NJT": 1.0,
 };
 
 // ══════════════════════════════════════════
 // SKU MATCH MAP
 // ══════════════════════════════════════════
 const SKU_MAP = {
+  "B0H5X3VCM5": { "sellerSku": "H58i BillQuick Go", "finalName": "H58i BillQuick Go" },
   "B0GPCQ9KLN": { "sellerSku": "Logic View Monitor HLT550", "finalName": "HLT550 Video Monitor" },
-  "B0F5Q4RV2R": { "sellerSku": "Helett 2D Barcode Scanner Fba", "finalName": "Helett 2D Barcode Scanner Fba" },
   "B0C8JRN652": { "sellerSku": "UY16 UHF Wireless mic", "finalName": "Uy 16 wireless mic" },
   "B0CN1153M4": { "sellerSku": "Helett HT35 Dual UHF Mic", "finalName": "Helett HT35 Dual UHF Mic" },
   "B0BRXX6HMR": { "sellerSku": "Wifi Dongle FBA", "finalName": "Wifi Dongle FBA" },
@@ -499,7 +499,7 @@ const SKU_MAP = {
   "B0CQ24C7DX": { "sellerSku": "V0-FM48-RT2B", "finalName": "V0-FM48-RT2B" },
   "B0DGF32QRT": { "sellerSku": "Helett AC1200 Dual Band Wifi Router", "finalName": "AC1200 Wifi Router" },
   "B0DD7LH58C": { "sellerSku": "Helett JH1200", "finalName": "Helett JH1200" },
-  "B0FZL52KY4": { "sellerSku": "Helett infiStick Tv Stick", "finalName": "Helett infiStick Tv Stick" },
+  "B0FZL52KY4": { "sellerSku": "Helett InfiniStick Tv Stick", "finalName": "Helett InfiniStick Tv Stick" },
   "B0CQTJH6WX": { "sellerSku": "Car-Jumper-Black", "finalName": "Car-Jumper-Black" },
   "B0D39NNN57": { "sellerSku": "Helett HT15 wired desktop scanner", "finalName": "Helett HT15 wired desktop scanner" },
   "B0D4F12NJT": { "sellerSku": "Uniy U01 Rfid Card", "finalName": "Uniy U01 Rfid Card" },
@@ -548,7 +548,7 @@ const SKU_MAP = {
   "B0CZ99K438": { "sellerSku": "H80i Autocut Thermal Printer", "finalName": "H80i Autocut Thermal Printer" },
   "B07T2VZMSG": { "sellerSku": "HTPHT580BLACK", "finalName": "HTPHT580BLACK" },
   "B0DDL3TR1L": { "sellerSku": "helett HE24 Label Printer", "finalName": "HE24 mini printer" },
-  "B0CPDPTHVN": { "sellerSku": "Helett Ht20 Barcode Scanner", "finalName": "HT20 barcode" },
+  "B0CPDPTHVN": { "sellerSku": "Helett Ht20 Barcode Scanner New", "finalName": "HT20 barcode New" },
   "B0D9KJJ7WF": { "sellerSku": "D8-ZNA6-NT4M", "finalName": "D8-ZNA6-NT4M" },
   "B07FDG8GQT": { "sellerSku": "1UC46Projector", "finalName": "1UC46Projector" },
   "B01H35Y352": { "sellerSku": "UC 30 Project 3", "finalName": "UC 30 Project 3" },
@@ -590,12 +590,17 @@ const SKU_MAP = {
   "B08PSLZYZV": { "sellerSku": "UC20 mini projector", "finalName": "UC20 mini projector" },
   "B0DBCW1PS4": { "sellerSku": "UNIY UY720 Smartdoor Lock FBA", "finalName": "UY720 door lock" },
   "B0CQM5THV3": { "sellerSku": "ECO- D3-BT", "finalName": "BT Sound bar" },
-  "B0GDKY6QHN": { "sellerSku": "Helett infiStick android stick", "finalName": "Helett infiStick Tv Stick" },
+  "B0GDKY6QHN": { "sellerSku": "Helett InfiniStick android stick", "finalName": "Helett InfiniStick Tv Stick" },
   "B0FGTMFZFM": { "sellerSku": "MO-DT5V-SO2M", "finalName": "MO-DT5V-SO2M" },
   "B0DGCG6MN4": { "sellerSku": "Helett HE760 Receipt Printer FBA", "finalName": "Helett HE760 Receipt Printer FBA" },
   "B0CR7JGRYJ": { "sellerSku": "SKU: OFFICE_LOCK_BLACK_30-100", "finalName": "SKU: OFFICE_LOCK_BLACK_30-100" },
   "B0FHQSL9DH": { "sellerSku": "Helett H30CPro Printer", "finalName": "Helett H30CPro Printer" },
-  "B0CMMMJ5WY": { "sellerSku": "Helett HT35 Dual microphone", "finalName": "Helett HT35 Dual microphone" }
+  "B0CMMMJ5WY": { "sellerSku": "Helett HT35 Dual microphone", "finalName": "Helett HT35 Dual microphone" },
+  "B0F5Q4RV2R": { "sellerSku": "HT20 Lite Barcode Scanner","finalName":"HT20 Lite Barcode Scanner"},
+  "B0H1HP2K4L": { "sellerSku": "Helett 4x6 Thermal Label (400)","finalName": "Helett 4x6 Thermal Label (400)"},
+  "B0H5R8L5LW": { "sellerSku": "HLT552 Portable Monitor Pro","finalName": "HLT552 Portable Monitor Pro"},
+  "B0H6QGN526": { "sellerSku": "2x1 Label Roll","finalName": "2x1 Label Roll"},
+  "B0HCTXG4RD": { "sellerSku": "HLT551 Logic View Neo","finalName": "Logic View Neo"},
 };
 
 function resolveSkuName(asin, fallback) {
@@ -784,14 +789,14 @@ function parseSheets(abFba, abFc){
   const ibN  = findSheet(wbFba, SH_FBA_INV);
 
   if(!aN)   throw new Error(`Sheet "${SH_AMZ_FUL}" not found in FBA workbook. Available: ${wbFba.SheetNames.join(', ')}`);
-  if(!mN)   throw new Error(`Sheet "${SH_MANAGE}" not found in FBA workbook. Available: ${wbFba.SheetNames.join(', ')}`);
-  if(!rsvN) throw new Error(`Sheet "${SH_RESERVED}" not found in FBA workbook. Available: ${wbFba.SheetNames.join(', ')}`);
+  if(!ibN)  throw new Error(`Sheet "${SH_FBA_INV}" not found in FBA workbook. Available: ${wbFba.SheetNames.join(', ')}`);
 
   const amzFul = sheetToRows(wbFba.Sheets[aN]);
-  const manage = sheetToRows(wbFba.Sheets[mN]);
-  const rsv    = sheetToRows(wbFba.Sheets[rsvN]);
-  const fbaInv = ibN ? sheetToRows(wbFba.Sheets[ibN]) : [];
-  if(!ibN) dbg('WARNING: Sheet "FBA_Inv" not found — inbound will be 0');
+  const manage = mN   ? sheetToRows(wbFba.Sheets[mN])   : [];
+  const rsv    = rsvN ? sheetToRows(wbFba.Sheets[rsvN]) : [];
+  const fbaInv = sheetToRows(wbFba.Sheets[ibN]);
+  if(!mN)   dbg('Sheet "Manage_FBA_inv" not found — unused, skipping');
+  if(!rsvN) dbg('Sheet "Reserved_inv" not found — unused, skipping');
 
   // FC workbook
   const wbFc = XLSX.read(abFc, {type:'array', cellDates:true});
@@ -953,6 +958,35 @@ function buildInboundMap(fbaInv){
   return ibMap;
 }
 
+// FBA_Inv → fbaInvAvailMap (available col) — primary source for FBA Available
+function buildFbaInvAvailMap(fbaInv){
+  const avMap = new Map();
+  if(!fbaInv.length){ dbg('FBA_Inv (available): empty'); return avMap; }
+
+  const h = Object.keys(fbaInv[0]);
+  const asinCol = detectCol(h, ['asin']);
+  const avCol   = detectCol(h, ['available','afn-fulfillable-quantity','fulfillable','avail']);
+
+  dbg('FBA_Inv avail cols → asin:', asinCol, 'available:', avCol);
+
+  if(!asinCol || !avCol){
+    dbg('WARNING: FBA_Inv "available" col not found. Headers:', h.join(', '));
+    return avMap;
+  }
+
+  for(const row of fbaInv){
+    const asin = norm(row[asinCol]);
+    if(!asin || asin === 'ASIN' || ASIN_BLOCKLIST.has(asin)) continue;
+    const qty = toNum(row[avCol]);
+    avMap.set(asin, (avMap.get(asin)||0) + qty);
+  }
+
+  dbg('FBA_Inv avail map entries:', avMap.size);
+  return avMap;
+}
+
+// ══════════════════════════════════════════
+// MERGE
 // ══════════════════════════════════════════
 // MERGE
 // ══════════════════════════════════════════
@@ -961,8 +995,9 @@ function mergeData(sell, unMap, amzFul, manage, rsv, fbaInv){
 
   // ── Build FBA maps ──
   const {fbaAvailMap, fbaUnsellMap, fbaSkuMap} = buildAmzFulMaps(amzFul);
-  const fctMap = buildReservedMap(fbaInv);
-  const ibMap  = buildInboundMap(fbaInv);
+  const fctMap       = buildReservedMap(fbaInv);
+  const ibMap        = buildInboundMap(fbaInv);
+  const fbaInvAvailMap = buildFbaInvAvailMap(fbaInv);  // primary FBA Available source
   // Manage_FBA_inv (afn-fulfillable-quantity) no longer used — On Hand = Amz_fulfilled_inv SELLABLE
 
   // ── FC sell map ──
@@ -989,23 +1024,25 @@ function mergeData(sell, unMap, amzFul, manage, rsv, fbaInv){
   const merged = [];
 
   // All ASINs from FBA side (Amz_fulfilled_inv is primary FBA source)
-  const fbaSet = new Set([...fbaAvailMap.keys(), ...fbaUnsellMap.keys(), ...fbaSkuMap.keys()]);
+  const fbaSet = new Set([...fbaAvailMap.keys(), ...fbaUnsellMap.keys(), ...fbaSkuMap.keys(), ...fbaInvAvailMap.keys()]);
 
   for(const asin of fbaSet){
     if(ASIN_BLOCKLIST.has(asin)) continue;
     const sku        = resolveSkuName(asin, fbaSkuMap.get(asin)||'--');
-    const fbaAvail   = fbaAvailMap.get(asin)  || 0;   // SELLABLE from Amz_fulfilled_inv
+    const fbaAvail   = fbaInvAvailMap.has(asin)
+                         ? fbaInvAvailMap.get(asin)          // primary: FBA_Inv "available"
+                         : (fbaAvailMap.get(asin) || 0);    // fallback: Amz_fulfilled_inv SELLABLE
     const fbaUnsell  = fbaUnsellMap.get(asin) || 0;
     const fcTransfer = fctMap.get(asin)        || 0;   // reserved_fc-transfers (display only)
     const inbound    = ibMap.get(asin)          || 0;   // inbound-quantity
-    const onHand     = fbaAvail + fcTransfer;           // On Hand = Amz_fulfilled_inv SELLABLE + FC Transfer
     const hasFCMatch = sellMap.has(asin) || unMap.has(asin);
     const fcSell     = sellMap.get(asin) ?? 0;
     const fcUnsell   = unMap.get(asin)   ?? 0;
-    const total      = fcSell + onHand;                // Total = FC Sell + On Hand
+    const onHand     = fcSell + fbaAvail;               // On Hand = FC Sell + FBA Available
+    const total      = fcSell + fbaAvail + inbound + fcTransfer;   // Total = FC Sell + FBA Avail + Inbound + FC Transfer
     const unit_cost  = COST_MAP[asin] || 0;
     const total_cost = unit_cost * total;
-    const issues     = buildIssues({hasFCMatch, isFCOnly:false, fcSell, fbaAvail:onHand, fcUnsell, fbaUnsell, total});
+    const issues     = buildIssues({hasFCMatch, isFCOnly:false, fcSell, fbaAvail, fcUnsell, fbaUnsell, total});
     merged.push({
       sku, asin,
       fc_sellable:  hasFCMatch ? fcSell   : 0,
@@ -1032,11 +1069,12 @@ function mergeData(sell, unMap, amzFul, manage, rsv, fbaInv){
     const sku       = resolveSkuName(asin, sellSku.get(asin)||'--');
     const fcTransfer= fctMap.get(asin)  || 0;
     const inbound   = ibMap.get(asin)   || 0;
-    const onHand    = (fbaAvailMap.get(asin) || 0) + fcTransfer;  // On Hand = Amz_fulfilled_inv SELLABLE + FC Transfer
-    const total     = fcSell + onHand;
+    const fbaAvail  = fbaAvailMap.get(asin) || 0;
+    const onHand    = fcSell + fbaAvail;               // On Hand = FC Sell + FBA Available
+    const total     = fcSell + fbaAvail + inbound + fcTransfer;   // Total = FC Sell + FBA Avail + Inbound + FC Transfer
     const unit_cost = COST_MAP[asin] || 0;
     const total_cost= unit_cost * total;
-    const issues    = buildIssues({hasFCMatch:true, isFCOnly:true, fcSell, fbaAvail:onHand, fcUnsell, fbaUnsell:0, total});
+    const issues    = buildIssues({hasFCMatch:true, isFCOnly:true, fcSell, fbaAvail, fcUnsell, fbaUnsell:0, total});
     merged.push({
       sku, asin,
       fc_sellable:  fcSell,
