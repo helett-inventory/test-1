@@ -197,6 +197,17 @@ td:last-child{border-right:none;}
 .ibadge.ls{background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);color:var(--orange);}
 .ibadge.hu{background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);color:var(--purple);}
 .ibadge.fo{background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:var(--blue);}
+.ibadge.nm,.ibadge.nc{background:rgba(250,204,21,.13);border:1px solid rgba(250,204,21,.35);color:#facc15;}
+.chip.y{background:#1c1a05;border-color:#facc15;color:#facc15;}
+/* UNMAPPED BANNER */
+#unmapped{display:none;background:#1c1a05;border:1px solid rgba(250,204,21,.4);border-radius:12px;padding:14px 18px;margin-bottom:20px;}
+.um-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.um-t{font-weight:700;color:#facc15;font-size:.82rem;}
+.um-btns{display:flex;gap:6px;flex-wrap:wrap;}
+.um-btn{height:28px;padding:0 10px;background:var(--bg3);border:1px solid rgba(250,204,21,.35);border-radius:7px;color:#facc15;font-family:'IBM Plex Mono',monospace;font-size:.67rem;font-weight:600;cursor:pointer;}
+.um-btn:hover{background:rgba(250,204,21,.12);}
+.um-list{margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:.7rem;color:var(--text2);line-height:1.8;max-height:180px;overflow:auto;display:none;}
+.um-list b{color:#fde68a;font-weight:600;}
 .th{position:relative;display:inline-flex;}
 .tb{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#0a0b10;border:1px solid var(--border2);border-radius:8px;padding:9px 12px;min-width:200px;max-width:250px;font-size:.71rem;color:var(--text2);line-height:1.55;z-index:999;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.5);white-space:normal;word-break:break-word;}
 .tb::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#0a0b10;}
@@ -240,6 +251,20 @@ td:last-child{border-right:none;}
 <div class="main">
 
   <div id="dbg"></div>
+
+  <!-- Unmapped ASIN alert -->
+  <div id="unmapped">
+    <div class="um-hd">
+      <span class="um-t" id="um-t">⚠ Unmapped ASINs</span>
+      <div class="um-btns">
+        <button class="um-btn" onclick="toggleUmList()" id="um-tog">Show list</button>
+        <button class="um-btn" onclick="copyStub('sku')">Copy SKU_MAP stubs</button>
+        <button class="um-btn" onclick="copyStub('cost')">Copy COST_MAP stubs</button>
+        <button class="um-btn" onclick="toggleChip('nm')">Filter table</button>
+      </div>
+    </div>
+    <div class="um-list" id="um-list"></div>
+  </div>
 
   <!-- KPIs -->
   <div class="kpi-grid">
@@ -318,6 +343,7 @@ td:last-child{border-right:none;}
         <button class="chip" id="chls" onclick="toggleChip('ls')">↓ Low Stock</button>
         <button class="chip" id="chhu" onclick="toggleChip('hu')">↑ High Unsellable</button>
         <button class="chip" id="chfo" onclick="toggleChip('fo')">◈ FC Only</button>
+        <button class="chip" id="chnm" onclick="toggleChip('nm')">? Unmapped</button>
       </div>
       <button class="btn-dl" onclick="downloadExcel()" title="Download currently visible rows as Excel">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -398,7 +424,7 @@ const ASIN_BLOCKLIST = new Set([
   "B013JYPTA4","B0BRKVYG8X","B07TB4DZTK","B0DJK3GNCY","B01DYJ8R4O",
   "B0D9KKFVT6","B0BL3LJHRB","B08FC23JD7","B07T2VZMSG","B0D9KJJ7WF",
   "B07FDG8GQT","B01H35Y352","B07MK547MK","B0C3HZDJ5C",
-  "B0C96F68YL","B0BRXVQ85M","B0FZSCW83R","B0BD9191XX","B0DQGSMG4N",
+  "B0C96F68YL","B0BRXVQ85M","B0BD9191XX","B0DQGSMG4N",
   "B091TCSG4D","B07T85LWH7","B09TY1SZP6","B0DTQ3ZCBH","B0DRL8ZDWX",
   "B086ZFW6HD","B0BJMLX4RR","B0CQTK12SW","B09K4M1JSN","B09TWLRXZ3",
   "B07Q5PC3SV","B0F6MXY655","B0BRN9ZGL1","B0CC8ZFPRX","B0DD7RS56N",
@@ -561,7 +587,7 @@ const SKU_MAP = {
   "B0BRXVQ85M": { "sellerSku": "UNIY UY20+ Mini Led projector", "finalName": "UNIY UY20+ Mini Led projector" },
   "B0DTNVQ34H": { "sellerSku": "HE24 Label Tape", "finalName": "12x30 HE24 labels" },
   "B0FLV3V1W4": { "sellerSku": "Helett H65Clite Printer", "finalName": "H65C Lite" },
-  "B0FZSCW83R": { "sellerSku": "Helett H75C Printer", "finalName": "H65C Mini Printer (New)" },
+  "B0FZSCW83R": { "sellerSku": "H65C Mini Printer Black (New)", "finalName": "H65C Mini Printer Black (New)" },
   "B0BD9191XX": { "sellerSku": "UY400 mini Led Projector", "finalName": "UY400 mini Led Projector" },
   "B0FGCT1MWB": { "sellerSku": "Helett Ht15 Desktop Barcode Scanner", "finalName": "HT15 wired desktop scanner" },
   "B0DQGSMG4N": { "sellerSku": "Helett Label Paper 4x6", "finalName": "Helett Label Paper 4x6" },
@@ -601,6 +627,8 @@ const SKU_MAP = {
   "B0H5R8L5LW": { "sellerSku": "HLT552 Portable Monitor Pro","finalName": "HLT552 Portable Monitor Pro"},
   "B0H6QGN526": { "sellerSku": "2x1 Label Roll","finalName": "2x1 Label Roll"},
   "B0HCTXG4RD": { "sellerSku": "HLT551 Logic View Neo","finalName": "Logic View Neo"},
+  "B0HG4THQCHD": { "sellerSku": "H80i Billquick Neo - BT","finalName": "H80i Billquick Neo - BT"},
+  "B0HH3NH8G5": { "sellerSku": "Helett Travel-Fi Neo","finalName": "Helett Travel-Fi Neo"},
 };
 
 function resolveSkuName(asin, fallback) {
@@ -1042,7 +1070,7 @@ function mergeData(sell, unMap, amzFul, manage, rsv, fbaInv){
     const total      = fcSell + fbaAvail + inbound + fcTransfer;   // Total = FC Sell + FBA Avail + Inbound + FC Transfer
     const unit_cost  = COST_MAP[asin] || 0;
     const total_cost = unit_cost * total;
-    const issues     = buildIssues({hasFCMatch, isFCOnly:false, fcSell, fbaAvail, fcUnsell, fbaUnsell, total});
+    const issues     = buildIssues({asin, hasFCMatch, isFCOnly:false, fcSell, fbaAvail, fcUnsell, fbaUnsell, total});
     merged.push({
       sku, asin,
       fc_sellable:  hasFCMatch ? fcSell   : 0,
@@ -1074,7 +1102,7 @@ function mergeData(sell, unMap, amzFul, manage, rsv, fbaInv){
     const total     = fcSell + fbaAvail + inbound + fcTransfer;   // Total = FC Sell + FBA Avail + Inbound + FC Transfer
     const unit_cost = COST_MAP[asin] || 0;
     const total_cost= unit_cost * total;
-    const issues    = buildIssues({hasFCMatch:true, isFCOnly:true, fcSell, fbaAvail, fcUnsell, fbaUnsell:0, total});
+    const issues    = buildIssues({asin, hasFCMatch:true, isFCOnly:true, fcSell, fbaAvail, fcUnsell, fbaUnsell:0, total});
     merged.push({
       sku, asin,
       fc_sellable:  fcSell,
@@ -1098,8 +1126,14 @@ function mergeData(sell, unMap, amzFul, manage, rsv, fbaInv){
 // ══════════════════════════════════════════
 // ISSUE BUILDER
 // ══════════════════════════════════════════
-function buildIssues({hasFCMatch, isFCOnly, fcSell, fbaAvail, fcUnsell, fbaUnsell, total}){
+function buildIssues({asin, hasFCMatch, isFCOnly, fcSell, fbaAvail, fcUnsell, fbaUnsell, total}){
   const issues = [];
+  if(asin && !SKU_MAP[asin]){
+    issues.push({type:'nm', label:'No SKU Map', msg:`ASIN ${asin} is not in SKU_MAP. Name shown is raw seller-sku from sheet. Add an entry to SKU_MAP.`});
+  }
+  if(asin && !COST_MAP[asin]){
+    issues.push({type:'nc', label:'No Cost', msg:`ASIN ${asin} has no unit cost in COST_MAP. Total Cost counts it as ₹0.`});
+  }
   if(!hasFCMatch){
     issues.push({type:'mm', label:'ASIN Mismatch', msg:'This ASIN is in FBA inventory but not found in any FC sheet. FC Sellable and Unsellable will show as 0.'});
   }
@@ -1262,7 +1296,7 @@ function renderTable(rows){
   set('rbadge', `${rows.length.toLocaleString()} rows`);
   set('tfc', `Showing ${rows.length.toLocaleString()} of ${allRows.length.toLocaleString()} entries`);
   if(!rows.length){
-    tbody.innerHTML = `<tr><td colspan="12"><div class="empty"><div class="ei">📦</div><p>No rows match the current filter.</p></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="13"><div class="empty"><div class="ei">📦</div><p>No rows match the current filter.</p></div></td></tr>`;
     return;
   }
   tbody.innerHTML = rows.map(r => {
@@ -1303,12 +1337,46 @@ function badgeHtml(r){
   if(!r.issues||!r.issues.length) return '';
   return '<div class="iw">'+r.issues.map(iss=>`
     <span class="th" tabindex="0">
-      <span class="ibadge ${iss.type}">${iss.type==='mm'?'⚠':`${iss.type==='fo'?'◈':iss.type==='ls'?'↓':'↑'} ${esc(iss.label)}`}</span>
+      <span class="ibadge ${iss.type}">${iss.type==='mm'?'⚠':`${iss.type==='fo'?'◈':iss.type==='ls'?'↓':(iss.type==='nm'||iss.type==='nc')?'?':'↑'} ${esc(iss.label)}`}</span>
       <div class="tb"><div class="tb-t">${esc(iss.label)}</div>${esc(iss.msg)}</div>
     </span>`).join('')+'</div>';
 }
 
 document.addEventListener('click', () => document.querySelectorAll('.th.to').forEach(x => x.classList.remove('to')));
+
+// ══════════════════════════════════════════
+// UNMAPPED ASIN ALERT
+// ══════════════════════════════════════════
+let umNoSku=[], umNoCost=[];
+function renderUnmapped(rows){
+  umNoSku  = rows.filter(r => !SKU_MAP[r.asin]);
+  umNoCost = rows.filter(r => !COST_MAP[r.asin]);
+  const box = $('unmapped');
+  if(!umNoSku.length && !umNoCost.length){ box.style.display='none'; return; }
+  set('um-t', `⚠ Unmapped ASINs — ${umNoSku.length} missing SKU name · ${umNoCost.length} missing unit cost`);
+  const line = r => `<b>${esc(r.asin)}</b> · ${esc(r.sku)} · total ${r.total.toLocaleString()}`;
+  $('um-list').innerHTML =
+    (umNoSku.length  ? `<div style="color:#facc15;">Not in SKU_MAP (${umNoSku.length})</div>${umNoSku.map(line).join('<br>')}` : '') +
+    (umNoCost.length ? `<div style="color:#facc15;margin-top:8px;">Not in COST_MAP (${umNoCost.length})</div>${umNoCost.map(line).join('<br>')}` : '');
+  box.style.display = 'block';
+  dbg('Unmapped → no SKU_MAP:', umNoSku.map(r=>r.asin).join(', ') || 'none');
+  dbg('Unmapped → no COST_MAP:', umNoCost.map(r=>r.asin).join(', ') || 'none');
+}
+function toggleUmList(){
+  const l=$('um-list'), open=l.style.display==='block';
+  l.style.display = open ? 'none' : 'block';
+  set('um-tog', open ? 'Show list' : 'Hide list');
+}
+function copyStub(kind){
+  const src = kind==='sku' ? umNoSku : umNoCost;
+  if(!src.length){ alert('Nothing missing.'); return; }
+  const txt = kind==='sku'
+    ? src.map(r => `  "${r.asin}": { "sellerSku": ${JSON.stringify(r.sku)}, "finalName": ${JSON.stringify(r.sku)} },`).join('\n')
+    : src.map(r => `  "${r.asin}": 0, // ${r.sku}`).join('\n');
+  const done = () => alert(`Copied ${src.length} ${kind==='sku'?'SKU_MAP':'COST_MAP'} lines. Paste into the map in index.html.`);
+  if(navigator.clipboard) navigator.clipboard.writeText(txt).then(done).catch(()=>prompt('Copy:', txt));
+  else prompt('Copy:', txt);
+}
 
 // ══════════════════════════════════════════
 // FILTERS + SORT
@@ -1320,6 +1388,7 @@ function applyFilters(){
   if(chips.has('ls')) rows = rows.filter(r => r.issues.some(i => i.type==='ls'));
   if(chips.has('hu')) rows = rows.filter(r => r.issues.some(i => i.type==='hu'));
   if(chips.has('fo')) rows = rows.filter(r => r.issues.some(i => i.type==='fo'));
+  if(chips.has('nm')) rows = rows.filter(r => r.issues.some(i => i.type==='nm'||i.type==='nc'));
   if(q) rows = rows.filter(r => r.sku.toLowerCase().includes(q) || r.asin.toLowerCase().includes(q));
   if(sortCol){
     rows.sort((a,b) => {
@@ -1333,7 +1402,7 @@ function applyFilters(){
 
 function toggleChip(name){
   chips.has(name) ? chips.delete(name) : chips.add(name);
-  const map = {mm:'r', ls:'o', hu:'p', fo:'b'};
+  const map = {mm:'r', ls:'o', hu:'p', fo:'b', nm:'y'};
   for(const [n,cls] of Object.entries(map)){
     const el = $('ch'+n);
     if(!el) continue;
@@ -1364,6 +1433,7 @@ async function boot(){
     filteredRows = [...allRows];
     renderKPIs(allRows);
     renderCharts(allRows);
+    renderUnmapped(allRows);
     applyFilters();
 
     const dp = $('dbg');
