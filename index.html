@@ -200,7 +200,7 @@ td:last-child{border-right:none;}
 .ibadge.nm,.ibadge.nc{background:rgba(250,204,21,.13);border:1px solid rgba(250,204,21,.35);color:#facc15;}
 .chip.y{background:#1c1a05;border-color:#facc15;color:#facc15;}
 /* UNMAPPED BANNER */
-#unmapped{display:none;background:#1c1a05;border:1px solid rgba(250,204,21,.4);border-radius:12px;padding:14px 18px;margin-bottom:20px;}
+#unmapped{display:none;background:#1c1a05;border:1px solid rgba(250,204,21,.4);border-radius:12px;padding:14px 18px;margin-top:20px;}
 .um-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
 .um-t{font-weight:700;color:#facc15;font-size:.82rem;}
 .um-btns{display:flex;gap:6px;flex-wrap:wrap;}
@@ -252,19 +252,6 @@ td:last-child{border-right:none;}
 
   <div id="dbg"></div>
 
-  <!-- Unmapped ASIN alert -->
-  <div id="unmapped">
-    <div class="um-hd">
-      <span class="um-t" id="um-t">⚠ Unmapped ASINs</span>
-      <div class="um-btns">
-        <button class="um-btn" onclick="toggleUmList()" id="um-tog">Show list</button>
-        <button class="um-btn" onclick="copyStub('sku')">Copy SKU_MAP stubs</button>
-        <button class="um-btn" onclick="copyStub('cost')">Copy COST_MAP stubs</button>
-        <button class="um-btn" onclick="toggleChip('nm')">Filter table</button>
-      </div>
-    </div>
-    <div class="um-list" id="um-list"></div>
-  </div>
 
   <!-- KPIs -->
   <div class="kpi-grid">
@@ -383,6 +370,20 @@ td:last-child{border-right:none;}
       <span id="tfc">—</span>
       <span id="tft">—</span>
     </div>
+  </div>
+
+  <!-- Unmapped ASIN alert -->
+  <div id="unmapped">
+    <div class="um-hd">
+      <span class="um-t" id="um-t">⚠ Unmapped ASINs</span>
+      <div class="um-btns">
+        <button class="um-btn" onclick="toggleUmList()" id="um-tog">Show list</button>
+        <button class="um-btn" onclick="copyStub('sku')">Copy SKU_MAP stubs</button>
+        <button class="um-btn" onclick="copyStub('cost')">Copy COST_MAP stubs</button>
+        <button class="um-btn" onclick="toggleChip('nm')">Filter table</button>
+      </div>
+    </div>
+    <div class="um-list" id="um-list"></div>
   </div>
 
 </div>
